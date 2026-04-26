@@ -4,20 +4,8 @@ Jenkins MCP Server - Job管理工具模块
 基于python-jenkins的实现
 """
 
-import os
 from typing import Optional, Set
-
-# 权限控制常量
-TOOL_TAGS_READ = frozenset({'read'})
-TOOL_TAGS_WRITE = frozenset({'write'})
-TOOL_TAGS_ADMIN = frozenset({'admin'})
-
-# 只读模式检查
-def check_read_only(tool_tags: frozenset) -> None:
-    """检查只读模式"""
-    read_only = os.getenv('JENKINS_READ_ONLY', 'false').lower() == 'true'
-    if read_only and tool_tags != TOOL_TAGS_READ:
-        raise PermissionError("只读模式下禁止此操作")
+from jenkins_mcp.tools.utils import check_read_only
 
 
 # 工具定义

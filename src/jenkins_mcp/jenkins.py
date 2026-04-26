@@ -119,34 +119,34 @@ class Jenkins:
     2. python-jenkins库
     3. 其他参考资料
     """
-    
+
     def __init__(
-        self,
-        url: str,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        timeout: int = 30,
-        verify_ssl: bool = True,
+            self,
+            url: str,
+            username: Optional[str] = None,
+            password: Optional[str] = None,
+            timeout: int = 30,
+            verify_ssl: bool = True,
     ):
         self.server = url.rstrip('/') + '/'
         self.timeout = timeout
         self.crumb = None
         self._verify_ssl = verify_ssl
-        
+
         self._session = requests.Session()
         if username and password:
             self._session.auth = HTTPBasicAuth(username, password)
-        
+
         if not verify_ssl:
             import warnings
             warnings.filterwarnings('ignore', category=InsecureRequestWarning)
             self._session.verify = False
-        
+
         self._session.mount(
             self.server,
             HTTPAdapter(max_retries=Retry(total=0, backoff_factor=0.1))
         )
-    
+
     def _build_url(self, format_spec: str, variables: Optional[dict] = None) -> str:
         """构建完整的URL"""
         if variables:
@@ -154,16 +154,16 @@ class Jenkins:
         else:
             url_path = format_spec
         return str(urllib.parse.urljoin(self.server, url_path))
-    
+
     def _get_encoded_params(self, params: dict) -> dict:
         """URL编码参数"""
         for k, v in params.items():
             if k in ["name", "msg", "short_name", "from_short_name",
-                    "to_short_name", "folder_url", "from_folder_url", "to_folder_url",
-                    "artifact", "number", "node", "id", "domain_name"]:
+                     "to_short_name", "folder_url", "from_folder_url", "to_folder_url",
+                     "artifact", "number", "node", "id", "domain_name"]:
                 params[k] = urllib.parse.quote(str(v).encode('utf8'))
         return params
-    
+
     def _get_job_folder(self, name: str) -> tuple:
         """
         解析job名称，返回folder路径和短名称
@@ -174,11 +174,11 @@ class Jenkins:
         short_name = a_path[-1]
         folder_url = ('job/' + '/job/'.join(a_path[:-1]) + '/') if len(a_path) > 1 else ''
         return folder_url, short_name
-    
+
     def _maybe_add_auth(self):
         """确保认证已配置"""
         pass  # 已在初始化时设置
-    
+
     def maybe_add_crumb(self, req) -> None:
         """自动添加CSRF crumb"""
         if self.crumb is None:
@@ -195,25 +195,25 @@ class Jenkins:
                 self.crumb = False
             except Exception:
                 self.crumb = False
-        
+
         if self.crumb:
             req.headers[self.crumb['crumbRequestField']] = self.crumb['crumb']
-    
+
     def jenkins_open(
-        self,
-        req,
-        add_crumb: bool = True,
-        resolve_auth: bool = True
+            self,
+            req,
+            add_crumb: bool = True,
+            resolve_auth: bool = True
     ) -> str:
         """发送请求并返回响应文本"""
         return self.jenkins_request(req, add_crumb, resolve_auth).text
-    
+
     def jenkins_request(
-        self,
-        req,
-        add_crumb: bool = True,
-        resolve_auth: bool = True,
-        stream: bool = False
+            self,
+            req,
+            add_crumb: bool = True,
+            resolve_auth: bool = True,
+            stream: bool = False
     ):
         """发送HTTP请求"""
         try:
@@ -221,14 +221,14 @@ class Jenkins:
                 self._maybe_add_auth()
             if add_crumb:
                 self.maybe_add_crumb(req)
-            
+
             prepared = self._session.prepare_request(req)
-            
+
             settings = self._session.merge_environment_settings(
                 prepared.url, {}, stream, self._session.verify, None
             )
             response = self._session.send(prepared, **settings)
-            
+
             # 403自动重试机制
             if add_crumb and response.status_code == 403 and self.crumb:
                 self.crumb = None
@@ -261,22 +261,22 @@ class Jenkins:
             url = url + query
         response = self.jenkins_open(requests.Request('GET', self._build_url(url)))
         return json.loads(response)
-    
+
     def get_whoami(self, depth: int = 0) -> dict:
         """获取当前用户信息"""
         url = WHOAMI_URL % {'depth': depth}
         response = self.jenkins_open(requests.Request('GET', self._build_url(url)))
         return json.loads(response)
-    
+
     def get_version(self) -> str:
         """获取Jenkins版本"""
         req = requests.Request('GET', self._build_url(''))
         req.headers['X-Jenkins'] = '0.0'
         response = self.jenkins_request(req, add_crumb=False, resolve_auth=True)
         return response.headers.get('X-Jenkins', 'unknown')
-    
+
     # ========== Job管理方法 ==========
-    
+
     def get_job_info(self, name: str, depth: int = 0, fetch_all_builds: bool = False) -> dict:
         """获取Job信息"""
         folder_url, short_name = self._get_job_folder(name)
@@ -286,7 +286,7 @@ class Jenkins:
         if fetch_all_builds:
             return self._add_missing_builds(json.loads(response))
         return json.loads(response)
-    
+
     def _add_missing_builds(self, data: dict) -> dict:
         """补全build列表（Jenkins默认只返回100条）"""
         if not data.get("builds"):
@@ -295,7 +295,7 @@ class Jenkins:
         first_build = data["firstBuild"]["number"] if data.get("firstBuild") else oldest_loaded
         if oldest_loaded == first_build:
             return data
-        
+
         folder_url, short_name = self._get_job_folder(data.get("fullName", ""))
         response = self.jenkins_open(requests.Request(
             'GET', self._build_url(ALL_BUILDS, locals())
@@ -303,7 +303,7 @@ class Jenkins:
         if response:
             data["builds"] = json.loads(response).get("allBuilds", [])
         return data
-    
+
     def get_job_name(self, name: str) -> Optional[str]:
         """检查Job是否存在"""
         folder_url, short_name = self._get_job_folder(name)
@@ -314,31 +314,31 @@ class Jenkins:
             return json.loads(response)['name']
         except NotFoundException:
             return None
-    
+
     def job_exists(self, name: str) -> bool:
         """检查Job是否存在"""
         return self.get_job_name(name) is not None
-    
+
     def get_all_jobs(self, folder_depth: Optional[int] = None, folder_depth_per_request: int = 10) -> list:
         """获取所有Job（支持文件夹嵌套）"""
         jobs_query = 'jobs'
         for _ in range(folder_depth_per_request):
             jobs_query = JOBS_QUERY_TREE % jobs_query
         jobs_query = JOBS_QUERY % jobs_query
-        
+
         jobs_list = []
         jobs = [(0, [], self.get_info(query=jobs_query)['jobs'])]
-        
+
         for lvl, root, lvl_jobs in jobs:
             if not isinstance(lvl_jobs, list):
                 lvl_jobs = [lvl_jobs]
-            
+
             for job in lvl_jobs:
                 path = root + [job['name']]
                 if 'fullname' not in job:
                     job['fullname'] = '/'.join(path)
                 jobs_list.append(job)
-                
+
                 if 'jobs' in job and isinstance(job['jobs'], list):
                     if folder_depth is None or lvl < folder_depth:
                         children = job['jobs']
@@ -346,29 +346,29 @@ class Jenkins:
                             url_path = ''.join(['/job/' + p for p in path])
                             children = self.get_info(url_path + '/api/json?tree=jobs[url,name]')['jobs']
                         jobs.append((lvl + 1, path, children))
-        
+
         return jobs_list
-    
+
     def get_job_config(self, name: str) -> str:
         """获取Job配置XML"""
         folder_url, short_name = self._get_job_folder(name)
         return self.jenkins_open(requests.Request('GET', self._build_url(CONFIG_JOB, locals())))
-    
+
     def create_job(self, name: str, config_xml: str) -> None:
         """创建Job"""
         folder_url, short_name = self._get_job_folder(name)
         if self.job_exists(name):
             raise JenkinsException(f'job[{name}] already exists')
-        
+
         self.jenkins_open(requests.Request(
             'POST', self._build_url(CREATE_JOB, locals()),
             data=config_xml.encode('utf-8'),
             headers=DEFAULT_HEADERS
         ))
-        
+
         if not self.job_exists(name):
             raise JenkinsException(f'create[{name}] failed')
-    
+
     def reconfig_job(self, name: str, config_xml: str) -> None:
         """更新Job配置"""
         folder_url, short_name = self._get_job_folder(name)
@@ -377,54 +377,54 @@ class Jenkins:
             data=config_xml.encode('utf-8'),
             headers=DEFAULT_HEADERS
         ))
-    
+
     def delete_job(self, name: str) -> None:
         """删除Job"""
         folder_url, short_name = self._get_job_folder(name)
         self.jenkins_open(requests.Request('POST', self._build_url(DELETE_JOB, locals())))
         if self.job_exists(name):
             raise JenkinsException(f'delete[{name}] failed')
-    
+
     def copy_job(self, from_name: str, to_name: str) -> None:
         """复制Job"""
         from_folder_url, from_short_name = self._get_job_folder(from_name)
         to_folder_url, to_short_name = self._get_job_folder(to_name)
-        
+
         if from_folder_url != to_folder_url:
             raise JenkinsException('copy failed: source and destination folder must be the same')
-        
+
         self.jenkins_open(requests.Request(
             'POST', self._build_url(COPY_JOB, locals())
         ))
-        
+
         if not self.job_exists(to_name):
             raise JenkinsException(f'copy[{from_name} to {to_name}] failed')
-    
+
     def rename_job(self, from_name: str, to_name: str) -> None:
         """重命名Job"""
         from_folder_url, from_short_name = self._get_job_folder(from_name)
         to_folder_url, to_short_name = self._get_job_folder(to_name)
-        
+
         if from_folder_url != to_folder_url:
             raise JenkinsException('rename failed: source and destination folder must be the same')
-        
+
         self.jenkins_open(requests.Request(
             'POST', self._build_url(RENAME_JOB, locals())
         ))
-        
+
         if not self.job_exists(to_name):
             raise JenkinsException(f'rename[{from_name} to {to_name}] failed')
-    
+
     def enable_job(self, name: str) -> None:
         """启用Job"""
         folder_url, short_name = self._get_job_folder(name)
         self.jenkins_open(requests.Request('POST', self._build_url(ENABLE_JOB, locals())))
-    
+
     def disable_job(self, name: str) -> None:
         """禁用Job"""
         folder_url, short_name = self._get_job_folder(name)
         self.jenkins_open(requests.Request('POST', self._build_url(DISABLE_JOB, locals())))
-    
+
     def set_next_build_number(self, name: str, number: int) -> None:
         """设置下一个构建号"""
         folder_url, short_name = self._get_job_folder(name)
@@ -432,11 +432,11 @@ class Jenkins:
             'POST', self._build_url(SET_JOB_BUILD_NUMBER, locals()),
             data=f"nextBuildNumber={number}".encode('utf-8')
         ))
-    
+
     def build_job_url(self, name: str, parameters: Optional[dict] = None, token: Optional[str] = None) -> str:
         """获取构建URL"""
         folder_url, short_name = self._get_job_folder(name)
-        
+
         if parameters:
             if token:
                 if isinstance(parameters, list):
@@ -450,24 +450,24 @@ class Jenkins:
             return self._build_url(BUILD_JOB, locals()) + '?' + urllib.parse.urlencode({'token': token})
         else:
             return self._build_url(BUILD_JOB, locals())
-    
+
     def build_job(self, name: str, parameters: Optional[dict] = None, token: Optional[str] = None) -> int:
         """触发构建，返回队列ID"""
         response = self.jenkins_request(requests.Request(
             'POST', self.build_job_url(name, parameters, token)
         ))
-        
+
         location = response.headers.get('Location')
         if not location:
             raise JenkinsException("Header 'Location' not found in response")
-        
+
         if location.endswith('/'):
             location = location[:-1]
-        
+
         return int(location.split('/')[-1])
-    
+
     # ========== Build管理方法 ==========
-    
+
     def get_build_info(self, name: str, number: int, depth: int = 0) -> dict:
         """获取Build信息"""
         folder_url, short_name = self._get_job_folder(name)
@@ -475,14 +475,14 @@ class Jenkins:
             'GET', self._build_url(BUILD_INFO, locals())
         ))
         return json.loads(response)
-    
+
     def get_build_console_output(self, name: str, number: int) -> str:
         """获取构建日志"""
         folder_url, short_name = self._get_job_folder(name)
         return self.jenkins_open(requests.Request(
             'GET', self._build_url(BUILD_CONSOLE_OUTPUT, locals())
         ))
-    
+
     def get_build_artifact(self, name: str, number: int, artifact: str) -> dict:
         """获取构建制品信息
         
@@ -506,7 +506,7 @@ class Jenkins:
             raise JenkinsException(f'job[{name}] number[{number}] artifact not found')
         except requests.exceptions.HTTPError:
             raise JenkinsException(f'job[{name}] number[{number}] not found')
-    
+
     def get_build_artifact_as_bytes(self, name: str, number: int, artifact: str) -> bytes:
         """获取构建制品 (原始字节)
         
@@ -527,7 +527,7 @@ class Jenkins:
             return response.content
         except requests.exceptions.HTTPError:
             raise JenkinsException(f'artifact {artifact} not found in job[{name}] number[{number}]')
-    
+
     def get_build_artifact_to_file(self, name: str, number: int, artifact: str, path: str) -> dict:
         """下载构建制品到本地文件
         
@@ -545,7 +545,7 @@ class Jenkins:
         with open(path, 'wb') as f:
             f.write(data)
         return {'file': path, 'size': len(data)}
-    
+
     def get_build_artifacts(self, name: str, number: int) -> list:
         """获取构建所有制品列表
         
@@ -558,12 +558,12 @@ class Jenkins:
         """
         info = self.get_build_info(name, number)
         return info.get('artifacts', [])
-    
+
     def get_running_builds(self) -> list:
         """获取运行中的构建"""
         builds = []
         nodes = self.get_nodes()
-        
+
         for node in nodes:
             node_name = node.get('displayName', '')
             if node_name in ['Built-In Node']:
@@ -572,7 +572,7 @@ class Jenkins:
                 info = self.get_node_info(node_name, depth=2)
             except Exception:
                 continue
-            
+
             for executor in info.get('executors', []):
                 executable = executor.get('currentExecutable')
                 if executable and 'number' in executable:
@@ -580,7 +580,7 @@ class Jenkins:
                     path = urllib.parse.urlparse(url).path
                     match = re.search(r'/job/([^/]+)/', path)
                     job_name = match.group(1) if match else 'unknown'
-                    
+
                     builds.append({
                         'name': job_name,
                         'number': executable['number'],
@@ -588,53 +588,53 @@ class Jenkins:
                         'node': node_name,
                         'executor': executor.get('number')
                     })
-        
+
         return builds
-    
+
     def stop_build(self, name: str, number: int) -> None:
         """停止构建"""
         folder_url, short_name = self._get_job_folder(name)
         self.jenkins_open(requests.Request('POST', self._build_url(STOP_BUILD, locals())))
-    
+
     def delete_build(self, name: str, number: int) -> None:
         """删除构建记录"""
         folder_url, short_name = self._get_job_folder(name)
         self.jenkins_open(requests.Request('POST', self._build_url(DELETE_BUILD, locals())))
-    
+
     def wipeout_job_workspace(self, name: str) -> None:
         """清空工作区"""
         folder_url, short_name = self._get_job_folder(name)
         self.jenkins_open(requests.Request('POST', self._build_url(WIPEOUT_JOB_WORKSPACE, locals())))
-    
+
     # ========== Queue管理方法 ==========
-    
+
     def get_queue_info(self) -> list:
         """获取队列信息"""
         response = self.jenkins_open(requests.Request('GET', self._build_url(Q_INFO)))
         return json.loads(response).get('items', [])
-    
+
     def get_queue_item(self, number: int, depth: int = 0) -> dict:
         """获取队列项"""
         response = self.jenkins_open(requests.Request(
             'GET', self._build_url(Q_ITEM, locals())
         ))
         return json.loads(response)
-    
+
     def cancel_queue(self, id: int) -> None:
         """取消队列项"""
         self.jenkins_open(requests.Request(
             'POST', self._build_url(CANCEL_QUEUE, locals())
         ))
-    
+
     # ========== Node管理方法 ==========
-    
+
     def get_nodes(self, depth: int = 0) -> list:
         """获取节点列表"""
         response = self.jenkins_open(requests.Request(
             'GET', self._build_url(NODE_LIST, locals())
         ))
         return json.loads(response).get('computer', [])
-    
+
     def get_node_info(self, name: str, depth: int = 0) -> dict:
         """获取节点详情"""
         if name.lower() == 'built-in node':
@@ -643,7 +643,7 @@ class Jenkins:
             'GET', self._build_url(NODE_INFO, locals())
         ))
         return json.loads(response)
-    
+
     def node_exists(self, name: str) -> bool:
         """检查节点是否存在"""
         try:
@@ -651,30 +651,30 @@ class Jenkins:
             return True
         except JenkinsException:
             return False
-    
+
     def get_node_config(self, name: str) -> str:
         """获取节点配置"""
         return self.jenkins_open(requests.Request(
             'GET', self._build_url(CONFIG_NODE, locals())
         ))
-    
+
     def create_node(
-        self,
-        name: str,
-        numExecutors: int = 2,
-        nodeDescription: Optional[str] = None,
-        remoteFS: str = '/var/lib/jenkins',
-        labels: Optional[str] = None,
-        exclusive: bool = False,
-        launcher: str = LAUNCHER_COMMAND,
-        launcher_params: Optional[dict] = None
+            self,
+            name: str,
+            numExecutors: int = 2,
+            nodeDescription: Optional[str] = None,
+            remoteFS: str = '/var/lib/jenkins',
+            labels: Optional[str] = None,
+            exclusive: bool = False,
+            launcher: str = LAUNCHER_COMMAND,
+            launcher_params: Optional[dict] = None
     ) -> None:
         """创建节点"""
         if self.node_exists(name):
             raise JenkinsException(f'node[{name}] already exists')
-        
+
         mode = 'EXCLUSIVE' if exclusive else 'NORMAL'
-        
+
         inner_params = {
             'nodeDescription': nodeDescription or '',
             'numExecutors': numExecutors,
@@ -689,21 +689,21 @@ class Jenkins:
         }
         launcher_params = launcher_params or {}
         launcher_params['stapler-class'] = launcher
-        
+
         params = {
             'name': name,
             'type': NODE_TYPE,
             'json': json.dumps(inner_params)
         }
-        
+
         self.jenkins_open(requests.Request(
             'POST', self._build_url(CREATE_NODE, locals()),
             data=params
         ))
-        
+
         if not self.node_exists(name):
             raise JenkinsException(f'create[{name}] failed')
-    
+
     def reconfig_node(self, name: str, config_xml: str) -> None:
         """更新节点配置"""
         self.jenkins_open(requests.Request(
@@ -711,18 +711,18 @@ class Jenkins:
             data=config_xml.encode('utf-8'),
             headers=DEFAULT_HEADERS
         ))
-    
+
     def delete_node(self, name: str) -> None:
         """删除节点"""
         if name.lower() in ['built-in node', '(master)', 'master']:
             raise JenkinsException('cannot delete built-in node')
-        
+
         self.get_node_info(name)
         self.jenkins_open(requests.Request('POST', self._build_url(DELETE_NODE, locals())))
-        
+
         if self.node_exists(name):
             raise JenkinsException(f'delete[{name}] failed')
-    
+
     def disable_node(self, name: str, msg: str = '') -> None:
         """禁用节点"""
         info = self.get_node_info(name)
@@ -731,7 +731,7 @@ class Jenkins:
         self.jenkins_open(requests.Request(
             'POST', self._build_url(TOGGLE_OFFLINE, locals())
         ))
-    
+
     def enable_node(self, name: str) -> None:
         """启用节点"""
         info = self.get_node_info(name)
@@ -740,16 +740,16 @@ class Jenkins:
         self.jenkins_open(requests.Request(
             'POST', self._build_url(TOGGLE_OFFLINE, locals())
         ))
-    
+
     # ========== Plugin管理方法 ==========
-    
+
     def get_plugins(self, depth: int = 2) -> dict:
         """获取插件列表"""
         response = self.jenkins_open(requests.Request(
             'GET', self._build_url(PLUGIN_INFO, {'depth': depth})
         ))
         return json.loads(response).get('plugins', [])
-    
+
     def get_plugin_info(self, short_name: str, depth: int = 2) -> Optional[dict]:
         """获取插件详情"""
         plugins = self.get_plugins(depth)
@@ -757,20 +757,20 @@ class Jenkins:
             if plugin.get('shortName') == short_name:
                 return plugin
         return None
-    
+
     # ========== View管理方法 ==========
-    
+
     def get_views(self) -> list:
         """获取视图列表"""
         return self.get_info().get('views', [])
-    
+
     def view_exists(self, name: str) -> bool:
         """检查视图是否存在"""
         try:
             return self.get_view_name(name) is not None
         except JenkinsException:
             return False
-    
+
     def get_view_name(self, name: str) -> Optional[str]:
         """检查视图是否存在"""
         folder_url, short_name = self._get_job_folder(name)
@@ -784,29 +784,29 @@ class Jenkins:
         except Exception:
             pass
         return None
-    
+
     def create_view(self, name: str, config_xml: str) -> None:
         """创建视图"""
         folder_url, short_name = self._get_job_folder(name)
         if self.view_exists(name):
             raise JenkinsException(f'view[{name}] already exists')
-        
+
         self.jenkins_open(requests.Request(
             'POST', self._build_url(CREATE_VIEW, locals()),
             data=config_xml.encode('utf-8'),
             headers=DEFAULT_HEADERS
         ))
-        
+
         if not self.view_exists(name):
             raise JenkinsException(f'create[{name}] failed')
-    
+
     def get_view_config(self, name: str) -> str:
         """获取视图配置"""
         folder_url, short_name = self._get_job_folder(name)
         return self.jenkins_open(requests.Request(
             'GET', self._build_url(CONFIG_VIEW, locals())
         ))
-    
+
     def reconfig_view(self, name: str, config_xml: str) -> None:
         """更新视图配置"""
         folder_url, short_name = self._get_job_folder(name)
@@ -815,17 +815,17 @@ class Jenkins:
             data=config_xml.encode('utf-8'),
             headers=DEFAULT_HEADERS
         ))
-    
+
     def delete_view(self, name: str) -> None:
         """删除视图"""
         folder_url, short_name = self._get_job_folder(name)
         self.jenkins_open(requests.Request('POST', self._build_url(DELETE_VIEW, locals())))
-        
+
         if self.view_exists(name):
             raise JenkinsException(f'delete[{name}] failed')
-    
+
     # ========== Script执行方法 ==========
-    
+
     def run_script(self, script: str, node: Optional[str] = None) -> str:
         """执行Groovy脚本"""
         result_prefix = 'Result: '
@@ -833,17 +833,17 @@ class Jenkins:
             url = self._build_url(NODE_SCRIPT_TEXT, {'node': node})
         else:
             url = self._build_url(SCRIPT_TEXT)
-        
+
         result = self.jenkins_open(requests.Request('POST', url, data={'script': script.encode('utf-8')}))
-        
+
         if result.startswith(result_prefix):
             return result[len(result_prefix):].rstrip('\n')
-        
+
         if result.startswith('Result: '):
             return result[8:].rstrip('\n')
-        
+
         raise JenkinsException(result)
-    
+
     def quiet_down(self) -> None:
         """Quiet Down Jenkins"""
         self.jenkins_open(requests.Request('POST', self._build_url(QUIET_DOWN, {})))

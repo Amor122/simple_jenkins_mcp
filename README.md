@@ -56,7 +56,7 @@ python -m jenkins_mcp.server --config jenkins_mcp\.env
 
 ## MCP 工具列表
 
-### Job管理 (12个)
+### Job管理 (10个)
 - `get_all_jobs` - 获取所有Job
 - `get_job` - 获取Job详情
 - `get_job_config` - 获取Job配置

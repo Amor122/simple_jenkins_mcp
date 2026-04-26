@@ -157,12 +157,35 @@ async def disable_job(name: str):
     """禁用Job"""
     return await tools.job.disable_job(get_jenkins_client(), name)
 
-
 @mcp.tool()
 async def build_job(name: str, parameters: dict = None, token: str = None):
     """触发构建"""
     return await tools.job.build_job(get_jenkins_client(), name, parameters, token)
 
+@mcp.tool()
+async def rename_job(name: str, new_name: str):
+    """重命名Job"""
+    return await tools.job.rename_job(get_jenkins_client(), name, new_name)
+
+@mcp.tool()
+async def set_next_build_number(name: str, number: int):
+    """设置下一个构建号"""
+    return await tools.job.set_next_build_number(get_jenkins_client(), name, number)
+
+@mcp.tool()
+async def wipeout_workspace(name: str):
+    """清空工作区"""
+    return await tools.job.wipeout_workspace(get_jenkins_client(), name)
+
+@mcp.tool()
+async def job_exists(name: str):
+    """检查Job是否存在"""
+    return await tools.job.job_exists(get_jenkins_client(), name)
+
+@mcp.tool()
+async def check_jenkinsfile_syntax(jenkinsfile: str):
+    """检查Pipeline语法"""
+    return await tools.job.check_jenkinsfile_syntax(get_jenkins_client(), jenkinsfile)
 
 # Build管理工具
 @mcp.tool()
@@ -196,6 +219,10 @@ async def delete_build(name: str, number: int):
     """删除Build记录"""
     return await tools.build.delete_build(get_jenkins_client(), name, number)
 
+@mcp.tool()
+async def stop_all_builds(name: str = None):
+    """停止所有运行中的Build"""
+    return await tools.build.stop_all_builds(get_jenkins_client(), name)
 
 @mcp.tool()
 async def get_build_artifacts(name: str, number: int):
@@ -211,7 +238,7 @@ async def get_build_artifact(name: str, number: int, artifact: str):
 
 @mcp.tool()
 async def download_build_artifact(name: str, number: int, artifact: str, path: str):
-    """下载Build���品到本地文件"""
+    """下载Build特定制品到本地文件"""
     return await tools.build.download_build_artifact(get_jenkins_client(), name, number, artifact, path)
 
 
@@ -305,6 +332,11 @@ async def set_node_offline(name: str, message: str = ""):
 async def set_node_online(name: str):
     """设置节点在线"""
     return await tools.node.set_node_online(get_jenkins_client(), name)
+
+@mcp.tool()
+async def node_exists(name: str):
+    """检查节点是否存在"""
+    return await tools.node.node_exists(get_jenkins_client(), name)
 
 
 # Plugin管理工具

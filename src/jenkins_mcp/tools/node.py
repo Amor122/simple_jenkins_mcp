@@ -4,13 +4,8 @@ Jenkins MCP Server - Node管理工具模块
 基于python-jenkins的实现
 """
 
-import os
 from typing import Optional
-
-def check_read_only(tags) -> None:
-    read_only = os.getenv('JENKINS_READ_ONLY', 'false').lower() == 'true'
-    if read_only and tags != frozenset({'read'}):
-        raise PermissionError("只读模式下禁止此操作")
+from jenkins_mcp.tools.utils import check_read_only
 
 
 # ==================== Node管理工具 ====================

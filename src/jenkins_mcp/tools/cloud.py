@@ -10,14 +10,8 @@ Jenkins MCP Server - Cloud管理工具模块 (基于Groovy)
 - 新建云模板
 """
 
-import os
 from jenkins_mcp.jenkins import JenkinsException
-
-
-def check_read_only(tags) -> None:
-    read_only = os.getenv('JENKINS_READ_ONLY', 'false').lower() == 'true'
-    if read_only and tags != frozenset({'read'}):
-        raise PermissionError("只读模式下禁止此操作")
+from jenkins_mcp.tools.utils import check_read_only
 
 
 def _run_groovy(jk, script: str) -> str:
