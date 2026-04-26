@@ -1,0 +1,162 @@
+[
+  {
+    "name": "get_all_jobs",
+    "status": "PASS",
+    "result": "[{'_class': 'hudson.model.FreeStyleProject', 'name': 'test', 'url': 'http://172.26.110.130:8080/job/test/', 'color': 'blue', 'fullname': 'test'}, {'_class': 'hudson.model.FreeStyleProject', 'name': 'test2', 'url': 'http://172.26.110.130:8080/job/test2/', 'color': 'blue', 'fullname': 'test2'}, {'_cla"
+  },
+  {
+    "name": "get_job",
+    "status": "PASS",
+    "result": "{'_class': 'hudson.model.FreeStyleProject', 'actions': [{'_class': 'hudson.model.ParametersDefinitionProperty', 'parameterDefinitions': [{'_class': 'hudson.model.StringParameterDefinition', 'defaultParameterValue': {'_class': 'hudson.model.StringParameterValue', 'value': ''}, 'description': None, 'n"
+  },
+  {
+    "name": "get_job_config",
+    "status": "PASS",
+    "result": "<?xml version='1.1' encoding='UTF-8'?>\n<project>\n  <actions/>\n  <description></description>\n  <keepDependencies>false</keepDependencies>\n  <properties>\n    <hudson.model.ParametersDefinitionProperty>\n      <parameterDefinitions>\n        <hudson.model.StringParameterDefinition>\n          <name>test_p"
+  },
+  {
+    "name": "disable_job",
+    "status": "PASS",
+    "result": "{'status': 'disabled', 'job': 'test'}"
+  },
+  {
+    "name": "enable_job",
+    "status": "PASS",
+    "result": "{'status': 'enabled', 'job': 'test'}"
+  },
+  {
+    "name": "get_build",
+    "status": "PASS",
+    "result": "{'_class': 'hudson.model.FreeStyleBuild', 'actions': [{'_class': 'hudson.model.CauseAction', 'causes': [{'_class': 'hudson.model.Cause$UserIdCause', 'shortDescription': 'Started by user amo', 'userId': 'amo', 'userName': 'amo'}]}, {}, {'_class': 'org.jenkinsci.plugins.displayurlapi.actions.RunDispla"
+  },
+  {
+    "name": "get_build_console_output",
+    "status": "PASS",
+    "result": "Started by user amo\nRunning as SYSTEM\nBuilding in workspace /var/lib/jenkins/workspace/test\n[test] $ /bin/sh -xe /tmp/jenkins3620328415758344915.sh\n+ echo xxx\nArchiving artifacts\n[WS-CLEANUP] Deleting project workspace...\n[WS-CLEANUP] Deferred wipeout is used...\n[WS-CLEANUP] done\nFinished: SUCCESS\n"
+  },
+  {
+    "name": "get_running_builds",
+    "status": "PASS",
+    "result": "[]"
+  },
+  {
+    "name": "get_build_artifacts",
+    "status": "PASS",
+    "result": "[{'displayPath': 'data.txt', 'fileName': 'data.txt', 'relativePath': 'data.txt'}]"
+  },
+  {
+    "name": "get_build_artifact",
+    "status": "PASS",
+    "result": "xxx\n"
+  },
+  {
+    "name": "get_all_queue_items",
+    "status": "PASS",
+    "result": "[]"
+  },
+  {
+    "name": "get_queue_items_by_job",
+    "status": "PASS",
+    "result": "[]"
+  },
+  {
+    "name": "get_all_nodes",
+    "status": "PASS",
+    "result": "[{'_class': 'hudson.model.Hudson$MasterComputer', 'actions': [], 'assignedLabels': [{'name': 'built-in'}], 'description': \"the Jenkins controller's built-in node\", 'displayName': 'Built-In Node', 'executors': [{}, {}], 'icon': 'symbol-computer', 'iconClassName': 'symbol-computer', 'idle': True, 'jnl"
+  },
+  {
+    "name": "get_node",
+    "status": "PASS",
+    "result": "{'_class': 'hudson.model.Hudson$MasterComputer', 'actions': [], 'assignedLabels': [{'actions': [], 'busyExecutors': 0, 'clouds': [], 'description': None, 'idleExecutors': 2, 'loadStatistics': {'_class': 'hudson.model.Label$1', 'availableExecutors': {}, 'busyExecutors': {}, 'connectingExecutors': {},"
+  },
+  {
+    "name": "get_node_config",
+    "status": "FAIL",
+    "error": "Built-In Node不支持获取配置XML"
+  },
+  {
+    "name": "get_nodes_by_label",
+    "status": "PASS",
+    "result": "[{'name': 'Built-In Node', 'offline': False, 'numExecutors': 2, 'labels': ['built-in']}]"
+  },
+  {
+    "name": "get_all_plugins",
+    "status": "PASS",
+    "result": "[{'active': True, 'backupVersion': None, 'bundled': False, 'deleted': False, 'dependencies': [], 'detached': True, 'downgradable': False, 'enabled': True, 'hasUpdate': False, 'longName': 'OWASP Markup Formatter Plugin', 'pinned': False, 'requiredCoreVersion': '2.479.1', 'shortName': 'antisamy-markup"
+  },
+  {
+    "name": "get_plugins_with_problems",
+    "status": "PASS",
+    "result": "[{'shortName': 'kubernetes-credentials-provider', 'problem': 'plugin_disabled', 'severity': 'warning'}]"
+  },
+  {
+    "name": "get_plugin",
+    "status": "PASS",
+    "result": "{'active': True, 'backupVersion': '999999-SNAPSHOT (private-b59f230b-Admin)', 'bundled': False, 'deleted': False, 'dependencies': [{'optional': False, 'shortName': 'caffeine-api', 'version': '3.2.0-166.v72a_6d74b_870f'}, {'optional': False, 'shortName': 'workflow-api', 'version': '1373.v7b_813f10efa"
+  },
+  {
+    "name": "get_all_labels",
+    "status": "PASS",
+    "result": "[{'name': 'built-in', 'nodes': [{'name': 'Built-In Node', 'offline': False, 'numExecutors': 2}], 'jobs': []}]"
+  },
+  {
+    "name": "get_label",
+    "status": "PASS",
+    "result": "{'name': 'built-in', 'nodes': [{'name': 'Built-In Node', 'offline': False, 'numExecutors': 2, 'architecture': 'unknown'}], 'jobs': []}"
+  },
+  {
+    "name": "get_label_load",
+    "status": "PASS",
+    "result": "{'busyExecutors': 0, 'totalExecutors': 0, 'queueLength': 0}"
+  },
+  {
+    "name": "get_all_clouds",
+    "status": "PASS",
+    "result": "[{'name': 'test_kubenetes', 'class': 'org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud', 'disabled': False, 'templates': [{'name': 'data1', 'label': '', 'image': '', 'containers': [], 'volumes': []}]}, {'name': 'test_docker_plugin', 'class': 'com.nirima.jenkins.plugins.docker.DockerCloud', 'd"
+  },
+  {
+    "name": "get_cloud_config",
+    "status": "PASS",
+    "result": "{'error': 'Cloud not found: test'}"
+  },
+  {
+    "name": "get_cloud_templates",
+    "status": "PASS",
+    "result": "[]"
+  },
+  {
+    "name": "get_provisioning_stats",
+    "status": "PASS",
+    "result": "{'clouds': [], 'system': {'mode': '', 'numExecutors': 0, 'queueLength': 0}, 'summary': {'totalClouds': 0, 'enabledClouds': 0, 'disabledClouds': 0, 'totalNodes': 0, 'onlineNodes': 0}}"
+  },
+  {
+    "name": "analyze_cloud_nodes",
+    "status": "PASS",
+    "result": "{'error': 'Cloud not found'}"
+  },
+  {
+    "name": "analyze_cloud_availability",
+    "status": "PASS",
+    "result": "{'error': 'Cloud not found'}"
+  },
+  {
+    "name": "get_kubernetes_pods",
+    "status": "PASS",
+    "result": "{'clouds': [{'name': 'test_kubenetes', 'namespace': 'default', 'serverUrl': 'https://172.26.110.130:6443', 'templates': [{'name': 'data1', 'label': 'test workspace-type', 'image': 'jenkins/inbound-agent:jdk21'}]}], 'pods': []}"
+  },
+  {
+    "name": "disable_cloud",
+    "status": "PASS",
+    "result": "{'status': 'success', 'message': 'Cloud test not found'}"
+  },
+  {
+    "name": "enable_cloud",
+    "status": "PASS",
+    "result": "{'status': 'success', 'message': 'Cloud test not found'}"
+  },
+  {
+    "name": "run_groovy_script",
+    "status": "PASS",
+    "result": "[test_kubenetes, test_docker_plugin, test_yet_another_docker_plugin]"
+  }
+]

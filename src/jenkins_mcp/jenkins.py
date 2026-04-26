@@ -22,7 +22,7 @@ import xml.etree.ElementTree as ET
 
 # REST Endpoints - 直接从python-jenkins提取
 INFO = 'api/json'
-PLUGIN_INFO = 'pluginManager/api/json?depth=%(depth)s'
+PLUGIN_INFO = '/pluginManager/api/json?depth=%(depth)s'
 CRUMB_URL = 'crumbIssuer/api/json'
 WHOAMI_URL = 'me/api/json?depth=%(depth)s'
 JOBS_QUERY = '?tree=%s'
@@ -143,7 +143,7 @@ class Jenkins:
             self._session.verify = False
         
         self._session.mount(
-            parse_url(self.server).scheme,
+            self.server,
             HTTPAdapter(max_retries=Retry(total=0, backoff_factor=0.1))
         )
     
@@ -222,10 +222,11 @@ class Jenkins:
             if add_crumb:
                 self.maybe_add_crumb(req)
             
-            settings = self._session.merge_environment_settings(
-                req.url, {}, stream, self._session.verify, None
-            )
             prepared = self._session.prepare_request(req)
+            
+            settings = self._session.merge_environment_settings(
+                prepared.url, {}, stream, self._session.verify, None
+            )
             response = self._session.send(prepared, **settings)
             
             # 403自动重试机制
@@ -564,7 +565,9 @@ class Jenkins:
         nodes = self.get_nodes()
         
         for node in nodes:
-            node_name = '(master)' if node['name'] in ['master', 'Built-In Node'] else node['name']
+            node_name = node.get('displayName', '')
+            if node_name in ['Built-In Node']:
+                node_name = '(master)'
             try:
                 info = self.get_node_info(node_name, depth=2)
             except Exception:
@@ -743,7 +746,7 @@ class Jenkins:
     def get_plugins(self, depth: int = 2) -> dict:
         """获取插件列表"""
         response = self.jenkins_open(requests.Request(
-            'GET', PLUGIN_INFO % {'depth': depth}
+            'GET', self._build_url(PLUGIN_INFO, {'depth': depth})
         ))
         return json.loads(response).get('plugins', [])
     

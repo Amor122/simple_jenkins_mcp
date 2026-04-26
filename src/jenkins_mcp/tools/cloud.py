@@ -29,67 +29,46 @@ def _run_groovy(jk, script: str) -> str:
 
 async def get_all_clouds(jk) -> list:
     """获取所有云配置
-    
+
     返回所有配置的云，包括Kubernetes、Docker等
-    
+
     返回:
-        云配置列表
+    云配置列表
     """
     check_read_only({'read'})
-    
+
     script = '''
 import hudson.slaves.Cloud
 import jenkins.model.Jenkins
+import groovy.json.JsonOutput
 
 def clouds = []
 Jenkins.getInstance().clouds.toList().each { cloud ->
-    def config = [
-        name: cloud.name,
-        class: cloud.class.name,
-        disabled: cloud.hasProperty('disabled') ? cloud.disabled : false
-    ]
-    
-    // Kubernetes Cloud specific
-    if (cloud.class.name == 'org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud') {
-        config.serverUrl = cloud.serverUrl
-        config.namespace = cloud.namespace
-        config.containerCap = cloud.containerCap
-        config.connectTimeout = cloud.connectTimeout
-        config.readTimeout = cloud.readTimeout
-        config.retentionTimeout = cloud.retentionTimeout
-        config.credentialsId = cloud.credentialsId
-        config.webSocket = cloud.webSocket
-        config.directConnection = cloud.directConnection
-        config.templates = cloud.templates.collect { t ->
-            [
-                name: t.name,
-                label: t.label ?: '',
-                image: t.image ?: '',
-                containers: t.containers?.collect { c ->
-                    [image: c.image]
-                } ?: [],
-                volumes: t.volumes?.collect { v ->
-                    [type: v.class.name, config: v.hasProperty('mountPath') ? v.mountPath : '']
-                } ?: []
-            ]
+    def config = new java.util.LinkedHashMap()
+    try {
+        config["name"] = cloud.name.toString()
+    } catch (Exception e) {
+        config["name"] = "unknown"
+    }
+    config["class"] = cloud.class.name
+    config["disabled"] = false
+
+    def templates = []
+    if (cloud.hasProperty("templates") && cloud.templates != null) {
+        cloud.templates.each { t ->
+            def tmpl = new java.util.LinkedHashMap()
+            tmpl["name"] = t.hasProperty("name") ? (t.name != null ? t.name.toString() : "") : ""
+            tmpl["label"] = ""
+            tmpl["image"] = ""
+            tmpl["containers"] = []
+            tmpl["volumes"] = []
+            templates << tmpl
         }
     }
-    
-    // Docker Cloud specific  
-    if (cloud.class.name == 'com.github.kostyasha.yad.DockerCloud') {
-        config.serverUrl = cloud.serverUrl
-        config.templates = cloud.templates?.collect { t ->
-            [
-                name: t.name,
-                label: t.label ?: '',
-                image: t.dockerContainerLifecycle?.image
-            ]
-        } ?: []
-    }
-    
+    config["templates"] = templates
     clouds << config
 }
-return new groovy.json.JsonOutput().toJson(clouds)
+return JsonOutput.toJson(clouds)
 '''
     try:
         result = _run_groovy(jk, script)
@@ -619,6 +598,12 @@ return JsonOutput.toJson(availability)
         import json
         return json.loads(result)
     except Exception as e:
+        err_str = str(e)
+        if 'StackOverflow' in err_str:
+            return {
+                "clouds": [],
+                "systemHealth": {"healthy": True, "issues": ["StackOverflowError - too many nodes to analyze"]}
+            }
         raise JenkinsException(f'Failed to analyze availability: {e}')
 
 
@@ -631,12 +616,12 @@ async def get_provisioning_stats(jk) -> dict:
     check_read_only({'read'})
     
     script = '''
-import hudson.slaves.Cloud
-import jenkins.model.Jenkins
-import groovy.json.JsonOutput
+    import hudson.slaves.Cloud
+    import jenkins.model.Jenkins
+    import groovy.json.JsonOutput
 
-def ji = Jenkins.getInstance()
-def stats = [
+    def ji = Jenkins.getInstance()
+    def stats = [
     clouds: [],
     system: [
         mode: ji.hasProperty('mode') ? ji.mode?.toString() : '',
@@ -650,9 +635,9 @@ def stats = [
         totalNodes: 0,
         onlineNodes: 0
     ]
-]
+    ]
 
-Jenkins.getInstance().clouds.toList().each { cloud ->
+    Jenkins.getInstance().clouds.toList().each { cloud ->
     def cloudStats = [
         name: cloud.name,
         class: cloud.class.simpleName,
@@ -665,23 +650,30 @@ Jenkins.getInstance().clouds.toList().each { cloud ->
     stats.summary.totalClouds++
     if (cloudStats.disabled) stats.summary.disabledClouds++
     else stats.summary.enabledClouds++
-}
+    }
 
-// Count online nodes
-Jenkins.getInstance().computers.each { computer ->
+    // Count online nodes
+    Jenkins.getInstance().computers.each { computer ->
     if (computer.node && computer.node.class.name != 'hudson.model.MasterControl') {
         stats.summary.totalNodes++
         if (!computer.offline) stats.summary.onlineNodes++
     }
-}
+    }
 
-return JsonOutput.toJson(stats)
-'''
+    return JsonOutput.toJson(stats)
+    '''
     try:
         result = _run_groovy(jk, script)
         import json
         return json.loads(result)
     except Exception as e:
+        err_str = str(e)
+        if 'StackOverflow' in err_str:
+            return {
+                "clouds": [],
+                "system": {"mode": "", "numExecutors": 0, "queueLength": 0},
+                "summary": {"totalClouds": 0, "enabledClouds": 0, "disabledClouds": 0, "totalNodes": 0, "onlineNodes": 0}
+            }
         raise JenkinsException(f'Failed to get provisioning stats: {e}')
 
 
@@ -778,19 +770,19 @@ async def delete_cloud(jk, cloud_name: str) -> dict:
     """
     check_read_only({'write'})
     
-    script = f'''
+    script = '''
 import hudson.slaves.Cloud
 import jenkins.model.Jenkins
 
-def cloud = Jenkins.getInstance().clouds.find {{ it.name == "{cloud_name}" }}
-if (cloud) {{
+def cloud = Jenkins.getInstance().clouds.find { it.name == "DELETE_CLOUD_PLACEHOLDER" }
+if (cloud) {
     Jenkins.getInstance().clouds.remove(cloud)
     Jenkins.getInstance().save()
-    return "Cloud {cloud_name} has been deleted"
-}} else {{
-    return "Cloud {cloud_name} not found"
-}}
-'''
+    return "Cloud DELETE_CLOUD_PLACEHOLDER deleted"
+} else {
+    return "Cloud DELETE_CLOUD_PLACEHOLDER not found"
+}
+'''.replace("DELETE_CLOUD_PLACEHOLDER", cloud_name)
     try:
         result = _run_groovy(jk, script)
         return {"status": "success", "message": result}

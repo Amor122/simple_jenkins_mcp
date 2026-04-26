@@ -33,6 +33,7 @@ except ImportError:
 
 from jenkins_mcp.jenkins import Jenkins
 from jenkins_mcp import tools
+from jenkins_mcp.tools.utils import write_only
 
 
 def _load_env_config(config_path: Optional[str] = None) -> None:
@@ -381,12 +382,6 @@ async def analyze_cloud_nodes(cloud_name: str = None):
 
 
 @mcp.tool()
-async def get_nodes_by_label(label: str):
-    """获取具有指定Label的所有节点"""
-    return await tools.cloud.get_nodes_by_label(get_jenkins_client(), label)
-
-
-@mcp.tool()
 async def analyze_cloud_availability(cloud_name: str = None):
     """分析云可用性和健康状态"""
     return await tools.cloud.analyze_cloud_availability(get_jenkins_client(), cloud_name)
@@ -443,27 +438,6 @@ async def get_cloud_provisioning_stats():
     return await tools.cloud.get_provisioning_stats(get_jenkins_client())
 
 
-# Groovy/Script管理工具
-@mcp.tool()
-async def run_groovy_script(script: str, node: str = ""):
-    """执行Groovy脚本
-    
-    参数:
-        script: Groovy脚本内容
-        node: 可选的节点名称，空字符串表示在master执行
-    
-    返回:
-        脚本执行结果
-    """
-    import os
-    read_only = os.getenv('JENKINS_READ_ONLY', 'false').lower() == 'true'
-    if read_only:
-        raise PermissionError("只读模式下禁止执行脚本")
-    
-    jk = get_jenkins_client()
-    return jk.run_script(script, node if node else None)
-
-
 # ==================== 主入口 ====================
 
 def main():
@@ -501,6 +475,24 @@ def main():
         mcp.settings.host = host
         mcp.settings.port = port
         mcp.run(transport=transport)
+
+
+@mcp.tool()
+@write_only
+async def run_groovy_script(script: str, node: str = None):
+    """执行任意Groovy脚本 (用于访问Jenkins没有REST API的内部功能)
+    
+    参数:
+        script: Groovy脚本代码
+        node: 可选，在指定节点上执行（默认在master）
+    
+    返回:
+        脚本执行结果
+    """
+    jk = get_jenkins_client()
+    if node:
+        return jk.run_script(script, node)
+    return jk.run_script(script)
 
 
 if __name__ == '__main__':

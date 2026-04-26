@@ -30,6 +30,8 @@ async def get_node(jk, name: str, depth: int = 2) -> dict:
 async def get_node_config(jk, name: str) -> str:
     """获取节点配置XML"""
     check_read_only({'read'})
+    if name in ['Built-In Node', '(master)', 'master']:
+        raise PermissionError("Built-In Node不支持获取配置XML")
     return jk.get_node_config(name)
 
 
