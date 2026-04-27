@@ -4,20 +4,8 @@ Jenkins MCP Server - Job管理工具模块
 基于python-jenkins的实现
 """
 
-from typing import Optional, Set
-from jenkins_mcp.tools.utils import check_read_only
-
-
-# 工具定义
-def define_job_tool(tags: frozenset):
-    """Job工具装饰器"""
-    def decorator(func):
-        @property
-        def wrapper(self):
-            check_read_only(tags)
-            return func
-        return wrapper
-    return decorator
+from typing import Optional
+from jenkins_mcp.tools.utils import admin_only, write_only
 
 
 # ==================== Job管理工具 ====================
@@ -52,8 +40,7 @@ async def get_job(jk, name: str, depth: int = 0) -> dict:
 
 
 async def get_job_config(jk, name: str) -> str:
-    """
-    获取Job配置XML
+    """获取Job配置XML
     
     参数:
         name: Job名称
@@ -64,24 +51,9 @@ async def get_job_config(jk, name: str) -> str:
     return jk.get_job_config(name)
 
 
-async def set_job_config(jk, name: str, config_xml: str) -> dict:
-    """
-    设置Job配置
-    
-    参数:
-        name: Job名称
-        config_xml: XML配置
-    
-    返回:
-        执行结果
-    """
-    jk.reconfig_job(name, config_xml)
-    return {"status": "success", "job": name}
-
-
+@admin_only
 async def create_job(jk, name: str, config_xml: str) -> dict:
-    """
-    创建新Job
+    """创建新Job
     
     参数:
         name: Job名称
@@ -94,9 +66,24 @@ async def create_job(jk, name: str, config_xml: str) -> dict:
     return {"status": "created", "job": name}
 
 
-async def delete_job(jk, name: str) -> dict:
+@admin_only
+async def set_job_config(jk, name: str, config_xml: str) -> dict:
+    """设置Job配置
+    
+    参数:
+        name: Job名称
+        config_xml: XML配置
+    
+    返回:
+        执行结果
     """
-    删除Job
+    jk.reconfig_job(name, config_xml)
+    return {"status": "success", "job": name}
+
+
+@admin_only
+async def delete_job(jk, name: str) -> dict:
+    """删除Job
     
     参数:
         name: Job名称
@@ -108,9 +95,9 @@ async def delete_job(jk, name: str) -> dict:
     return {"status": "deleted", "job": name}
 
 
+@admin_only
 async def copy_job(jk, from_name: str, to_name: str) -> dict:
-    """
-    复制Job
+    """复制Job
     
     参数:
         from_name: 源Job名称
@@ -123,9 +110,9 @@ async def copy_job(jk, from_name: str, to_name: str) -> dict:
     return {"status": "copied", "from": from_name, "to": to_name}
 
 
+@admin_only
 async def rename_job(jk, name: str, new_name: str) -> dict:
-    """
-    重命名Job
+    """重命名Job
     
     参数:
         name: 原Job名称
@@ -138,23 +125,9 @@ async def rename_job(jk, name: str, new_name: str) -> dict:
     return {"status": "renamed", "from": name, "to": new_name}
 
 
-async def enable_job(jk, name: str) -> dict:
-    """
-    启用Job
-    
-    参数:
-        name: Job名称
-    
-    返回:
-        执行结果
-    """
-    jk.enable_job(name)
-    return {"status": "enabled", "job": name}
-
-
+@write_only
 async def disable_job(jk, name: str) -> dict:
-    """
-    禁用Job
+    """禁用Job
     
     参数:
         name: Job名称

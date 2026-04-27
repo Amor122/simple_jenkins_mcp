@@ -5,14 +5,13 @@ Jenkins MCP Server - Build管理工具模块
 """
 
 from typing import Optional
-from jenkins_mcp.tools.utils import check_read_only
+from jenkins_mcp.tools.utils import admin_only, write_only
 
 
 # ==================== Build管理工具 ====================
 
 async def get_build(jk, name: str, number: int, depth: int = 0) -> dict:
-    """
-    获取Build信息
+    """获取Build信息
     
     参数:
         name: Job名称
@@ -22,7 +21,6 @@ async def get_build(jk, name: str, number: int, depth: int = 0) -> dict:
     返回:
         Build信息字典
     """
-    check_read_only({'read'})
     return jk.get_build_info(name, number, depth)
 
 
@@ -33,8 +31,7 @@ async def get_build_console_output(
     offset: int = 0,
     limit: int = None
 ) -> str:
-    """
-    获取构建日志
+    """获取构建日志
     
     参数:
         name: Job名称
@@ -45,7 +42,6 @@ async def get_build_console_output(
     返回:
         日志字符串
     """
-    check_read_only({'read'})
     output = jk.get_build_console_output(name, number)
     
     lines = output.split('\n')
@@ -58,19 +54,13 @@ async def get_build_console_output(
 
 
 async def get_running_builds(jk) -> list:
-    """
-    获取运行中的Build列表
-    
-    返回:
-        运行中的Build列表
-    """
-    check_read_only({'read'})
+    """获取运行中的Build列表"""
     return jk.get_running_builds()
 
 
+@write_only
 async def stop_build(jk, name: str, number: int) -> dict:
-    """
-    停止Build
+    """停止Build
     
     参数:
         name: Job名称
@@ -79,14 +69,13 @@ async def stop_build(jk, name: str, number: int) -> dict:
     返回:
         执行结果
     """
-    check_read_only({'write'})
     jk.stop_build(name, number)
     return {"status": "stopped", "job": name, "build_number": number}
 
 
+@write_only
 async def delete_build(jk, name: str, number: int) -> dict:
-    """
-    删除Build记录
+    """删除Build记录
     
     参数:
         name: Job名称
@@ -95,14 +84,13 @@ async def delete_build(jk, name: str, number: int) -> dict:
     返回:
         执行结果
     """
-    check_read_only({'write'})
     jk.delete_build(name, number)
     return {"status": "deleted", "job": name, "build_number": number}
 
 
+@write_only
 async def stop_all_builds(jk, name: str = None) -> dict:
-    """
-    停止所有运行中的Build
+    """停止所有运行中的Build
     
     参数:
         name: Job名称（可选，为None表示所有）
@@ -110,7 +98,6 @@ async def stop_all_builds(jk, name: str = None) -> dict:
     返回:
         停止的Build列表
     """
-    check_read_only({'write'})
     running = jk.get_running_builds()
     stopped = []
     
@@ -126,8 +113,7 @@ async def stop_all_builds(jk, name: str = None) -> dict:
 
 
 async def get_build_artifacts(jk, name: str, number: int) -> list:
-    """
-    获取Build的所有归档制品列表
+    """获取Build的所有归档制品列表
     
     参数:
         name: Job名称
@@ -136,13 +122,11 @@ async def get_build_artifacts(jk, name: str, number: int) -> list:
     返回:
         制品列表 [{relativePath, displayPath, fileName}, ...]
     """
-    check_read_only({'read'})
     return jk.get_build_artifacts(name, number)
 
 
 async def get_build_artifact(jk, name: str, number: int, artifact: str) -> str:
-    """
-    获取Build制品内容（文本）
+    """获取Build制品内容（文本）
     
     参数:
         name: Job名称
@@ -152,13 +136,13 @@ async def get_build_artifact(jk, name: str, number: int, artifact: str) -> str:
     返回:
         制品文本内容
     """
-    check_read_only({'read'})
     info = jk.get_build_artifact(name, number, artifact)
     if isinstance(info, dict) and 'content' in info:
         return info['content']
     return str(info)
 
 
+@write_only
 async def download_build_artifact(
     jk,
     name: str,
@@ -166,8 +150,7 @@ async def download_build_artifact(
     artifact: str,
     path: str
 ) -> dict:
-    """
-    下载Build制品到本地文件
+    """下载Build制品到本地文件
     
     参数:
         name: Job名称
@@ -178,18 +161,17 @@ async def download_build_artifact(
     返回:
         {'file': path, 'size': bytes}
     """
-    check_read_only({'write'})
     return jk.get_build_artifact_to_file(name, number, artifact, path)
 
 
+@write_only
 async def download_all_artifacts(
     jk,
     name: str,
     number: int,
     output_dir: str
 ) -> list:
-    """
-    下载Build的所有制品到本地目录
+    """下载Build的所有制品到本地目录
     
     参数:
         name: Job名称
@@ -199,7 +181,6 @@ async def download_all_artifacts(
     返回:
         下载的制品列表
     """
-    check_read_only({'write'})
     artifacts = jk.get_build_artifacts(name, number)
     import os
     os.makedirs(output_dir, exist_ok=True)

@@ -4,7 +4,7 @@ Jenkins MCP Server - Label管理工具模块
 基于python-jenkins的实现
 """
 
-from jenkins_mcp.tools.utils import check_read_only
+from jenkins_mcp.jenkins import JenkinsException
 
 
 def _parse_labels_from_node(node_info: dict) -> list:
@@ -23,9 +23,6 @@ def _parse_labels_from_node(node_info: dict) -> list:
     return labels
 
 
-from jenkins_mcp.jenkins import JenkinsException
-
-
 async def get_all_labels(jk, depth: int = 2) -> list:
     """获取所有Label及其关联的节点
     
@@ -38,7 +35,6 @@ async def get_all_labels(jk, depth: int = 2) -> list:
     返回:
         Label列表，每个label包含名称和关联的节点
     """
-    check_read_only({'read'})
     nodes_data = jk.get_nodes(depth=depth)
     
     labels_dict = {}
@@ -86,8 +82,6 @@ async def get_label(jk, name: str, depth: int = 2) -> dict:
     返回:
         Label详情
     """
-    check_read_only({'read'})
-    
     nodes_data = jk.get_nodes(depth=depth)
     
     label_info = {
@@ -133,8 +127,6 @@ async def get_nodes_by_label(jk, label: str, depth: int = 2) -> list:
     返回:
         节点列表
     """
-    check_read_only({'read'})
-    
     nodes_data = jk.get_nodes(depth=depth)
     result = []
     
@@ -168,8 +160,6 @@ async def get_label_load(jk) -> dict:
     返回:
         负载信息
     """
-    check_read_only({'read'})
-    
     try:
         info = jk.get_info()
         return {

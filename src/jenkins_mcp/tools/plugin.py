@@ -4,24 +4,18 @@ Jenkins MCP Server - Plugin管理工具模块
 基于python-jenkins的实现
 """
 
-from jenkins_mcp.tools.utils import check_read_only
-
-
 async def get_all_plugins(jk, depth: int = 2) -> list:
     """获取所有安装的插件"""
-    check_read_only({'read'})
     return jk.get_plugins(depth=depth)
 
 
 async def get_plugin(jk, short_name: str, depth: int = 2) -> dict:
     """获取指定插件详情"""
-    check_read_only({'read'})
     return jk.get_plugin_info(short_name, depth=depth)
 
 
 async def get_plugins_with_problems(jk) -> list:
     """获取有问题的插件"""
-    check_read_only({'read'})
     plugins = jk.get_plugins(depth=2)
     jenkins_version = jk.get_version()
     problems = []

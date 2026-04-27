@@ -11,7 +11,7 @@ Jenkins MCP Server - Cloud管理工具模块 (基于Groovy)
 """
 
 from jenkins_mcp.jenkins import JenkinsException
-from jenkins_mcp.tools.utils import check_read_only
+from jenkins_mcp.tools.utils import admin_only, write_only
 
 
 def _run_groovy(jk, script: str) -> str:
@@ -21,6 +21,7 @@ def _run_groovy(jk, script: str) -> str:
 
 # ==================== 配置读取 ====================
 
+@write_only
 async def get_all_clouds(jk) -> list:
     """获取所有云配置
 
@@ -29,7 +30,6 @@ async def get_all_clouds(jk) -> list:
     返回:
     云配置列表
     """
-    check_read_only({'read'})
 
     script = '''
 import hudson.slaves.Cloud
@@ -72,6 +72,7 @@ return JsonOutput.toJson(clouds)
         raise JenkinsException(f'Failed to get clouds: {e}')
 
 
+@write_only
 async def get_cloud_config(jk, name: str) -> dict:
     """获取指定云配置的详细信息
     
@@ -81,7 +82,6 @@ async def get_cloud_config(jk, name: str) -> dict:
     返回:
         云配置详情
     """
-    check_read_only({'read'})
     
     script = f'''
 import hudson.slaves.Cloud
@@ -184,6 +184,7 @@ return JsonOutput.toJson(config)
         raise JenkinsException(f'Failed to get cloud config for {name}: {e}')
 
 
+@write_only
 async def get_cloud_templates(jk, cloud_name: str) -> list:
     """获取云的所有模板
     
@@ -193,7 +194,6 @@ async def get_cloud_templates(jk, cloud_name: str) -> list:
     返回:
         模板列表
     """
-    check_read_only({'read'})
     
     script = f'''
 import hudson.slaves.Cloud
@@ -235,6 +235,7 @@ return JsonOutput.toJson(templates)
 
 # ==================== 节点分析 ====================
 
+@write_only
 async def analyze_cloud_nodes(jk, cloud_name: str = None) -> dict:
     """分析云相关的节点
     
@@ -244,7 +245,6 @@ async def analyze_cloud_nodes(jk, cloud_name: str = None) -> dict:
     返回:
         节点分析结果
     """
-    check_read_only({'read'})
     
     if cloud_name:
         script = f'''
@@ -381,6 +381,7 @@ return JsonOutput.toJson(nodeAnalysis)
         raise JenkinsException(f'Failed to analyze nodes: {e}')
 
 
+@write_only
 async def get_nodes_by_label(jk, label: str) -> list:
     """获取具有指定Label的所有节点（包括云节点）
     
@@ -390,7 +391,6 @@ async def get_nodes_by_label(jk, label: str) -> list:
     返回:
         节点列表
     """
-    check_read_only({'read'})
     
     script = f'''
 import hudson.model.Label
@@ -424,6 +424,7 @@ return JsonOutput.toJson(nodes)
 
 # ==================== 可用性分析 ====================
 
+@write_only
 async def analyze_cloud_availability(jk, cloud_name: str = None) -> dict:
     """分析云可用性和健康状态
     
@@ -433,7 +434,6 @@ async def analyze_cloud_availability(jk, cloud_name: str = None) -> dict:
     返回:
         可用性分析结果
     """
-    check_read_only({'read'})
     
     if cloud_name:
         script = f'''
@@ -601,13 +601,13 @@ return JsonOutput.toJson(availability)
         raise JenkinsException(f'Failed to analyze availability: {e}')
 
 
+@write_only
 async def get_provisioning_stats(jk) -> dict:
     """获取全局 Provisioning 统计信息
     
     返回:
         统计信息
     """
-    check_read_only({'read'})
     
     script = '''
     import hudson.slaves.Cloud
@@ -673,6 +673,7 @@ async def get_provisioning_stats(jk) -> dict:
 
 # ==================== 配置修改 ====================
 
+@write_only
 async def update_cloud_config(jk, cloud_name: str, config: dict) -> dict:
     """更新云配置
     
@@ -683,7 +684,6 @@ async def update_cloud_config(jk, cloud_name: str, config: dict) -> dict:
     返回:
         更新结果
     """
-    check_read_only({'write'})
     
     raise JenkinsException(
         'Cloud配置修改需要通过Groovy脚本执行。'
@@ -691,6 +691,7 @@ async def update_cloud_config(jk, cloud_name: str, config: dict) -> dict:
     )
 
 
+@write_only
 async def disable_cloud(jk, cloud_name: str) -> dict:
     """禁用云
     
@@ -700,7 +701,6 @@ async def disable_cloud(jk, cloud_name: str) -> dict:
     返回:
         执行结果
     """
-    check_read_only({'write'})
     
     script = f'''
 import hudson.slaves.Cloud
@@ -722,6 +722,7 @@ if (cloud) {{
         raise JenkinsException(f'Failed to disable cloud: {e}')
 
 
+@write_only
 async def enable_cloud(jk, cloud_name: str) -> dict:
     """启用云
     
@@ -731,7 +732,6 @@ async def enable_cloud(jk, cloud_name: str) -> dict:
     返回:
         执行结果
     """
-    check_read_only({'write'})
     
     script = f'''
 import hudson.slaves.Cloud
@@ -753,6 +753,7 @@ if (cloud) {{
         raise JenkinsException(f'Failed to enable cloud: {e}')
 
 
+@write_only
 async def delete_cloud(jk, cloud_name: str) -> dict:
     """删除云配置
     
@@ -762,7 +763,6 @@ async def delete_cloud(jk, cloud_name: str) -> dict:
     返回:
         执行结果
     """
-    check_read_only({'write'})
     
     script = '''
 import hudson.slaves.Cloud
@@ -784,6 +784,7 @@ if (cloud) {
         raise JenkinsException(f'Failed to delete cloud: {e}')
 
 
+@write_only
 async def delete_template(jk, cloud_name: str, template_name: str) -> dict:
     """删除云模板
     
@@ -794,7 +795,6 @@ async def delete_template(jk, cloud_name: str, template_name: str) -> dict:
     返回:
         执行结果
     """
-    check_read_only({'write'})
     
     script = f'''
 import hudson.slaves.Cloud
@@ -823,6 +823,7 @@ if (cloud) {{
 
 # ==================== 新建云和模板 ====================
 
+@write_only
 async def create_kubernetes_cloud(jk, name: str, server_url: str, namespace: str = "default",
                                    credentials_id: str = None, container_cap: int = 0) -> dict:
     """创建Kubernetes云配置
@@ -837,7 +838,6 @@ async def create_kubernetes_cloud(jk, name: str, server_url: str, namespace: str
     返回:
         创建结果
     """
-    check_read_only({'write'})
     
     script = f'''
 import org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud
@@ -872,6 +872,7 @@ return "Kubernetes cloud {{name}} created successfully"
         raise JenkinsException(f'Failed to create Kubernetes cloud: {e}')
 
 
+@write_only
 async def add_pod_template(jk, cloud_name: str, template_config: dict) -> dict:
     """添加Pod模板到Kubernetes云
     
@@ -890,7 +891,6 @@ async def add_pod_template(jk, cloud_name: str, template_config: dict) -> dict:
     返回:
         添加结果
     """
-    check_read_only({'write'})
     
     name = template_config.get('name', '')
     label = template_config.get('label', '')
@@ -939,6 +939,7 @@ return "Template {{name}} added to cloud {{cloud_name}}"
         raise JenkinsException(f'Failed to add template: {e}')
 
 
+@write_only
 async def get_kubernetes_pods(jk, namespace: str = None) -> dict:
     """获取Kubernetes pods信息
     
@@ -948,7 +949,6 @@ async def get_kubernetes_pods(jk, namespace: str = None) -> dict:
     返回:
         Pods信息
     """
-    check_read_only({'read'})
     
     script = f'''
 import org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud
