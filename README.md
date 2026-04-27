@@ -132,6 +132,12 @@ python -m jenkins_mcp.server --config jenkins_mcp\.env
 - `update_cloud_config` - 更新云配置
 - `get_nodes_by_label` - 获取具有指定Label的节点
 
+### Script管理 (4个)
+- `run_groovy_script` - 执行任意Groovy脚本
+- `get_jenkins_info` - 获取Jenkins系统信息
+- `get_jenkins_version` - 获取Jenkins版本
+- `get_whoami` - 获取当前认证用户信息
+
 ## 权限控制
 
 设置 `JENKINS_READ_ONLY=true` 启用只读模式，阻止所有写操作。

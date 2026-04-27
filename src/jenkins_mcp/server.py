@@ -470,6 +470,40 @@ async def get_cloud_provisioning_stats():
     return await tools.cloud.get_provisioning_stats(get_jenkins_client())
 
 
+# ==================== Script管理工具 ====================
+
+@mcp.tool()
+async def run_groovy_script(script: str, node: str = None):
+    """执行任意Groovy脚本 (用于访问Jenkins没有REST API的内部功能)
+    
+    参数:
+        script: Groovy脚本代码
+        node: 可选，在指定节点上执行（默认在master）
+    
+    返回:
+        脚本执行结果
+    """
+    return await tools.script.run_groovy_script(get_jenkins_client(), script, node)
+
+
+@mcp.tool()
+async def get_jenkins_info():
+    """获取Jenkins系统信息"""
+    return await tools.script.get_jenkins_info(get_jenkins_client())
+
+
+@mcp.tool()
+async def get_jenkins_version():
+    """获取Jenkins版本"""
+    return await tools.script.get_jenkins_version(get_jenkins_client())
+
+
+@mcp.tool()
+async def get_whoami():
+    """获取当前认证用户信息"""
+    return await tools.script.get_whoami(get_jenkins_client())
+
+
 # ==================== 主入口 ====================
 
 def main():
@@ -507,24 +541,6 @@ def main():
         mcp.settings.host = host
         mcp.settings.port = port
         mcp.run(transport=transport)
-
-
-@mcp.tool()
-@write_only
-async def run_groovy_script(script: str, node: str = None):
-    """执行任意Groovy脚本 (用于访问Jenkins没有REST API的内部功能)
-    
-    参数:
-        script: Groovy脚本代码
-        node: 可选，在指定节点上执行（默认在master）
-    
-    返回:
-        脚本执行结果
-    """
-    jk = get_jenkins_client()
-    if node:
-        return jk.run_script(script, node)
-    return jk.run_script(script)
 
 
 if __name__ == '__main__':
