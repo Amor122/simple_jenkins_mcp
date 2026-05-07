@@ -8,7 +8,7 @@ from jenkins_mcp.tools.utils import write_only
 
 
 @write_only
-async def run_groovy_script(jk, script: str, node: str = None) -> str:
+async def run_groovy_script(jk, script: str) -> str:
     """执行任意Groovy脚本
     
     用于访问Jenkins没有REST API的内部功能
@@ -16,13 +16,10 @@ async def run_groovy_script(jk, script: str, node: str = None) -> str:
     参数:
         jk: Jenkins客户端
         script: Groovy脚本代码
-        node: 可选，在指定节点上执行（默认在master）
     
     返回:
         脚本执行结果
     """
-    if node:
-        return jk.run_script(script, node)
     return jk.run_script(script)
 
 

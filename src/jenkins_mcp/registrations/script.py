@@ -13,9 +13,12 @@ def register_tools(mcp: FastMCP) -> None:
         return get_jenkins_client()
 
     @mcp.tool()
-    async def run_groovy_script(script: str, node: str = None):
-        """执行任意Groovy脚本"""
-        return await tools.script.run_groovy_script(get_jk(), script, node)
+    async def run_groovy_script(script: str):
+        """执行任意Groovy脚本
+        
+        用于访问Jenkins没有REST API的内部功能
+        """
+        return await tools.script.run_groovy_script(get_jk(), script)
 
     @mcp.tool()
     async def get_jenkins_info():
