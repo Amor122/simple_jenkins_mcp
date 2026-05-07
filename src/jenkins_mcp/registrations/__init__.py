@@ -8,8 +8,9 @@ from . import node
 from . import plugin
 from . import label
 from . import cloud
+from . import script
 
-__all__ = ['lockable_resources', 'job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud']
+__all__ = ['lockable_resources', 'job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud', 'script']
 
 
 def register_all_tools(mcp) -> None:
@@ -21,4 +22,5 @@ def register_all_tools(mcp) -> None:
     plugin.register_tools(mcp)
     label.register_tools(mcp)
     cloud.register_tools(mcp)
+    script.register_tools(mcp)
     lockable_resources.register_tools(mcp)
