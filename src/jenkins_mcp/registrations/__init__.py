@@ -1,6 +1,8 @@
 """Jenkins MCP工具注册"""
 
 from . import lockable_resources
+from . import config_file_provider
+from . import job_config_history
 from . import job
 from . import build
 from . import queue
@@ -10,7 +12,7 @@ from . import label
 from . import cloud
 from . import script
 
-__all__ = ['lockable_resources', 'job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud', 'script']
+__all__ = ['lockable_resources', 'config_file_provider', 'job_config_history', 'job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud', 'script']
 
 
 def register_all_tools(mcp) -> None:
@@ -24,3 +26,5 @@ def register_all_tools(mcp) -> None:
     cloud.register_tools(mcp)
     script.register_tools(mcp)
     lockable_resources.register_tools(mcp)
+    config_file_provider.register_tools(mcp)
+    job_config_history.register_tools(mcp)
