@@ -138,6 +138,28 @@ python -m jenkins_mcp.server --config jenkins_mcp\.env
 - `get_jenkins_version` - 获取Jenkins版本
 - `get_whoami` - 获取当前认证用户信息
 
+### 插件管理 - Config File Provider (8个)
+- `get_all_config_files` - 获取所有配置文件列表
+- `get_config_file` - 获取指定配置文件详情（含文件内容）
+- `add_config_file` - 添加文件配置（支持指定提供者类型）
+- `update_config_file` - 更新文件配置
+- `delete_config_file` - 删除文件配置
+- `get_all_config_providers` - 获取所有可用的文件提供者类型
+- `get_config_files_by_provider` - 按提供者类型筛选配置文件列表
+- `get_config_file_content` - 获取job某个历史版本的配置文件内容
+
+### 插件管理 - Job Config History (10个)
+- `get_all_config_history` - 获取全局配置历史（支持 all/system/jobs/deleted 过滤）
+- `get_job_config_history` - 获取指定job的配置历史记录
+- `get_node_config_history` - 获取指定node的配置历史记录
+- `get_config_file_content` - 获取job某个历史版本的配置文件原文
+- `get_config_diff` - 对比两个历史版本的配置差异（unified diff）
+- `restore_job_config` - 回退job配置到指定历史版本
+- `restore_node_config` - 回退node配置到指定历史版本
+- `delete_job_config_revision` - 删除job的某个历史版本
+- `delete_node_config_revision` - 删除node的某个历史版本
+- `restore_deleted_job` - 恢复已删除的job
+
 ## 权限控制
 
 设置 `JENKINS_READ_ONLY=true` 启用只读模式，阻止所有写操作。
