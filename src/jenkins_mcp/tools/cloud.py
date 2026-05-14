@@ -980,3 +980,50 @@ return JsonOutput.toJson(result)
         return json.loads(result)
     except Exception as e:
         raise JenkinsException(f'Failed to get pods: {e}')
+
+
+@write_only
+async def get_clouds_by_type(jk) -> list:
+    """获取所有云并按类型归类
+
+    返回各类云的类型标识，便于路由到对应的插件管理工具:
+      - docker: 使用 docker_cloud 模块管理
+      - kubernetes: 使用 kubernetes_cloud 模块管理
+      - yad: 使用 yad_cloud 模块管理
+      - other: 其他云类型
+    """
+    script = '''
+import jenkins.model.Jenkins
+import groovy.json.JsonOutput
+
+def result = []
+Jenkins.getInstance().clouds.each { cloud ->
+    def entry = [
+        name: cloud.name,
+        type: "other",
+        pluginModule: "",
+        className: cloud.class.name
+    ]
+
+    if (cloud.class.name == "com.nirima.jenkins.plugins.docker.DockerCloud") {
+        entry.type = "docker"
+        entry.pluginModule = "docker_cloud"
+    } else if (cloud.class.name == "org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud") {
+        entry.type = "kubernetes"
+        entry.pluginModule = "kubernetes_cloud"
+    } else if (cloud.class.name == "com.github.kostyasha.yad.DockerCloud") {
+        entry.type = "yad"
+        entry.pluginModule = "yad_cloud"
+    }
+
+    entry.templateCount = cloud.templates?.size() ?: 0
+    result << entry
+}
+return JsonOutput.toJson(result)
+'''
+    try:
+        result = _run_groovy(jk, script)
+        import json
+        return json.loads(result)
+    except Exception as e:
+        raise JenkinsException(f'Failed to get clouds by type: {e}')

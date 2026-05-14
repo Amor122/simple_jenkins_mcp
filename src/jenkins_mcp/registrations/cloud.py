@@ -79,3 +79,8 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_cloud_provisioning_stats():
         """获取云Provisioning统计"""
         return await tools.cloud.get_provisioning_stats(get_jk())
+
+    @mcp.tool()
+    async def get_clouds_by_type():
+        """获取所有云并按类型归类（docker/kubernetes/yad/other），便于路由到对应插件管理工具"""
+        return await tools.cloud.get_clouds_by_type(get_jk())
