@@ -399,6 +399,73 @@ return "{{\\"success\\": true, \\"id\\": \\"" + uuid + "\\", \\"label\\": \\"{la
         raise JenkinsException(f'Failed to add YAD template: {e}')
 
 
+async def update_yad_template(jk: Jenkins, cloud_name: str, template_id: str, template_config: dict) -> dict:
+    """更新YAD模板
+
+    参数:
+        cloud_name: YAD云名称
+        template_id: 模板ID或标签
+        template_config: 要更新的字段 {
+            label: str, remoteFs: str, numExecutors: int,
+            maxCapacity: int, image: str, command: str,
+            hostname: str, user: str, memoryLimit: int,
+            cpuShares: int, privileged: bool, tty: bool,
+            networkMode: str, volumes: list, environment: list,
+            bindPorts: str, extraHosts: list, dnsHosts: list
+        }
+    """
+    import json as _json
+    updates_json = _json.dumps(template_config)
+
+    script = f'''
+import com.github.kostyasha.yad.DockerCloud
+import com.github.kostyasha.yad.DockerSlaveTemplate
+import com.github.kostyasha.yad.DockerContainerLifecycle
+import com.github.kostyasha.yad.commons.DockerCreateContainer
+import jenkins.model.Jenkins
+import groovy.json.JsonSlurper
+
+def cloud = Jenkins.getInstance().clouds.find {{ it.name == "{cloud_name}" && it instanceof DockerCloud }}
+if (!cloud) return "{{\\"error\\": \\"YAD cloud not found: {cloud_name}\\"}}"
+
+def t = cloud.templates.find {{ it.id == "{template_id}" || it.labelString == "{template_id}" }}
+if (!t) return "{{\\"error\\": \\"Template not found: {template_id}\\"}}"
+
+def updates = new JsonSlurper().parseText(''' + _json.dumps(updates_json) + ''')
+
+if (updates.containsKey("label")) t.labelString = updates.label
+if (updates.containsKey("remoteFs")) t.remoteFs = updates.remoteFs
+if (updates.containsKey("numExecutors")) t.numExecutors = updates.numExecutors as int
+if (updates.containsKey("maxCapacity")) t.maxCapacity = updates.maxCapacity as int
+
+def lifecycle = t.dockerContainerLifecycle
+def cc = lifecycle.createContainer
+
+if (updates.containsKey("image")) lifecycle.image = updates.image
+if (updates.containsKey("command")) cc.command = updates.command
+if (updates.containsKey("hostname")) cc.hostname = updates.hostname
+if (updates.containsKey("user")) cc.user = updates.user
+if (updates.containsKey("memoryLimit")) cc.memoryLimit = updates.memoryLimit as long
+if (updates.containsKey("cpuShares")) cc.cpuShares = updates.cpuShares as int
+if (updates.containsKey("privileged")) cc.privileged = updates.privileged as boolean
+if (updates.containsKey("tty")) cc.tty = updates.tty as boolean
+if (updates.containsKey("networkMode")) cc.networkMode = updates.networkMode
+if (updates.containsKey("volumes")) cc.volumes = updates.volumes
+if (updates.containsKey("environment")) cc.environment = updates.environment
+if (updates.containsKey("bindPorts")) cc.bindPorts = updates.bindPorts
+if (updates.containsKey("extraHosts")) cc.extraHosts = updates.extraHosts
+if (updates.containsKey("dnsHosts")) cc.dnsHosts = updates.dnsHosts
+
+Jenkins.getInstance().save()
+return "{{\\"success\\": true, \\"id\\": \\"{template_id}\\"}}"
+'''
+    try:
+        result = _run_groovy(jk, script)
+        return json.loads(result)
+    except Exception as e:
+        raise JenkinsException(f'Failed to update YAD template: {e}')
+
+
 async def delete_yad_template(jk: Jenkins, cloud_name: str, template_id: str) -> dict:
     """删除YAD云中的模板"""
     script = f'''

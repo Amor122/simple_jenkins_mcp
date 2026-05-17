@@ -36,8 +36,13 @@ async def set_node_config(jk, name: str, config_xml: str) -> dict:
 
 @admin_only
 async def create_node(jk, name: str, config_xml: str) -> dict:
-    """创建节点"""
-    jk.create_node(name, launcher_params={'stapler-class': 'hudson.slaves.CommandLauncher'})
+    """创建节点
+
+    参数:
+        name: 节点名称
+        config_xml: 节点配置XML（定义启动方式、远程目录等）
+    """
+    jk.create_node(name, config_xml=config_xml)
     return {"status": "created", "node": name}
 
 

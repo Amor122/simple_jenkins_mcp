@@ -23,28 +23,64 @@ def register_tools(mcp: FastMCP) -> None:
         return await tools.plugins_management.lockable_resources.get_lockable_resource(get_jk(), name)
 
     @mcp.tool()
-    async def add_lockable_resource(name: str, labels: str = '', description: str = '', properties: dict = None):
-        """添加锁资源
-        
+    async def add_lockable_resource(name: str, labels: str = '', description: str = '',
+                                     allow_ephemeral: bool = True, properties: dict = None):
+        """添加锁资源（默认凭据）
+
         参数:
             name: 资源名称
             labels: 可选，资源标签（多个用空格分隔）
             description: 可选，资源描述
+            allow_ephemeral: 可选，是否允许临时资源（默认 True）
             properties: 可选，键值对属性，如 {"key1": "value1", "key2": "value2"}
         """
         return await tools.plugins_management.lockable_resources.add_lockable_resource(
-            get_jk(), name, labels, description, properties=properties
+            get_jk(), name, labels, description, allow_ephemeral, properties=properties
+        )
+
+    @mcp.tool()
+    async def add_lockable_resource_secure(
+        username: str, api_token: str, name: str,
+        labels: str = '', description: str = '',
+        allow_ephemeral: bool = True, properties: dict = None,
+        confirm: bool = False
+    ):
+        """添加锁资源（需管理员权限）
+
+        需要管理员身份。第一次调用时不传 confirm=True 会返回确认信息，
+        确认无误后第二次调用时传入 confirm=True 执行。
+        """
+        return await tools.plugins_management.lockable_resources.add_lockable_resource_secure(
+            username, api_token, name, labels, description, allow_ephemeral, properties, confirm
         )
 
     @mcp.tool()
     async def delete_lockable_resource(name: str):
-        """删除指定锁资源"""
+        """删除指定锁资源（默认凭据）"""
         return await tools.plugins_management.lockable_resources.delete_lockable_resource(get_jk(), name)
 
     @mcp.tool()
+    async def delete_lockable_resource_secure(username: str, api_token: str, name: str, confirm: bool = False):
+        """删除指定锁资源（需管理员权限）
+
+        需要管理员身份。第一次调用时不传 confirm=True 会返回确认信息，
+        确认无误后第二次调用时传入 confirm=True 执行。
+        """
+        return await tools.plugins_management.lockable_resources.delete_lockable_resource_secure(
+            username, api_token, name, confirm
+        )
+
+    @mcp.tool()
     async def unlock_lockable_resource(name: str):
-        """解锁指定锁资源"""
+        """解锁指定锁资源（默认凭据）"""
         return await tools.plugins_management.lockable_resources.unlock_lockable_resource(get_jk(), name)
+
+    @mcp.tool()
+    async def unlock_lockable_resource_secure(username: str, api_token: str, name: str, confirm: bool = False):
+        """解锁指定锁资源（需管理员权限）"""
+        return await tools.plugins_management.lockable_resources.unlock_lockable_resource_secure(
+            username, api_token, name, confirm
+        )
 
     @mcp.tool()
     async def reserve_lockable_resource(name: str, user: str = 'admin', reason: str = ''):
@@ -70,16 +106,34 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def set_lockable_resource_properties(name: str, properties: dict):
-        """设置锁资源的属性（替换所有属性）"""
+        """设置锁资源的属性（替换所有属性，默认凭据）"""
         return await tools.plugins_management.lockable_resources.set_lockable_resource_properties(
             get_jk(), name, properties
         )
 
     @mcp.tool()
+    async def set_lockable_resource_properties_secure(
+        username: str, api_token: str, name: str, properties: dict, confirm: bool = False
+    ):
+        """设置锁资源的属性（替换所有属性，需管理员权限）"""
+        return await tools.plugins_management.lockable_resources.set_lockable_resource_properties_secure(
+            username, api_token, name, properties, confirm
+        )
+
+    @mcp.tool()
     async def set_lockable_resource_property(name: str, key: str, value: str):
-        """设置锁资源的单个属性"""
+        """设置锁资源的单个属性（默认凭据）"""
         return await tools.plugins_management.lockable_resources.set_lockable_resource_property(
             get_jk(), name, key, value
+        )
+
+    @mcp.tool()
+    async def set_lockable_resource_property_secure(
+        username: str, api_token: str, name: str, key: str, value: str, confirm: bool = False
+    ):
+        """设置锁资源的单个属性（需管理员权限）"""
+        return await tools.plugins_management.lockable_resources.set_lockable_resource_property_secure(
+            username, api_token, name, key, value, confirm
         )
 
     @mcp.tool()

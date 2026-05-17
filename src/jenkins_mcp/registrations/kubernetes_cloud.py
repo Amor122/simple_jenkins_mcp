@@ -68,6 +68,19 @@ def register_tools(mcp: FastMCP) -> None:
         )
 
     @mcp.tool()
+    async def update_pod_template(cloud_name: str, template_name: str, template_config: dict):
+        """更新Kubernetes Pod模板
+
+        参数:
+            cloud_name: Kubernetes云名称
+            template_name: 要更新的模板名称
+            template_config: 需要更新的字段，包含label, instanceCap, namespace, yaml, containers等
+        """
+        return await tools.plugins_management.kubernetes_cloud.update_pod_template(
+            get_jk(), cloud_name, template_name, template_config
+        )
+
+    @mcp.tool()
     async def copy_pod_template(cloud_name: str, source_template_name: str, new_template_name: str):
         """复制Kubernetes Pod模板"""
         return await tools.plugins_management.kubernetes_cloud.copy_pod_template(

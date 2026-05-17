@@ -126,6 +126,20 @@ async def rename_job(jk, name: str, new_name: str) -> dict:
 
 
 @write_only
+async def enable_job(jk, name: str) -> dict:
+    """启用Job
+
+    参数:
+        name: Job名称
+
+    返回:
+        执行结果
+    """
+    jk.enable_job(name)
+    return {"status": "enabled", "job": name}
+
+
+@write_only
 async def disable_job(jk, name: str) -> dict:
     """禁用Job
     
@@ -139,6 +153,7 @@ async def disable_job(jk, name: str) -> dict:
     return {"status": "disabled", "job": name}
 
 
+@write_only
 async def build_job(
     jk, 
     name: str, 
@@ -159,6 +174,7 @@ async def build_job(
     return jk.build_job(name, parameters, token)
 
 
+@write_only
 async def set_next_build_number(jk, name: str, number: int) -> dict:
     """
     设置下一个构建号
@@ -174,6 +190,7 @@ async def set_next_build_number(jk, name: str, number: int) -> dict:
     return {"status": "success", "job": name, "next_build_number": number}
 
 
+@write_only
 async def wipeout_workspace(jk, name: str) -> dict:
     """
     清空工作区
@@ -200,15 +217,3 @@ async def job_exists(jk, name: str) -> bool:
     """
     return jk.job_exists(name)
 
-
-async def check_jenkinsfile_syntax(jk, jenkinsfile: str) -> list:
-    """
-    检查Pipeline语法
-    
-    参数:
-        jenkinsfile: Jenkinsfile内容
-    
-    返回:
-        错误列表
-    """
-    return jk.check_jenkinsfile_syntax(jenkinsfile)

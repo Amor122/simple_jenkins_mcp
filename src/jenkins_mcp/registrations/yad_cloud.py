@@ -65,6 +65,19 @@ def register_tools(mcp: FastMCP) -> None:
         )
 
     @mcp.tool()
+    async def update_yad_template(cloud_name: str, template_id: str, template_config: dict):
+        """更新YAD模板
+
+        参数:
+            cloud_name: YAD云名称
+            template_id: 模板ID或标签
+            template_config: 需要更新的字段，包含label, remoteFs, image, command, privileged等
+        """
+        return await tools.plugins_management.yad_cloud.update_yad_template(
+            get_jk(), cloud_name, template_id, template_config
+        )
+
+    @mcp.tool()
     async def copy_yad_template(cloud_name: str, source_template_id: str, new_label: str):
         """复制YAD模板"""
         return await tools.plugins_management.yad_cloud.copy_yad_template(

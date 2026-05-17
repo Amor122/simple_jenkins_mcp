@@ -7,6 +7,7 @@ from . import docker_cloud
 from . import kubernetes_cloud
 from . import yad_cloud
 from . import downstream_buildview
+from . import global_properties
 from . import job
 from . import build
 from . import queue
@@ -36,3 +37,4 @@ def register_all_tools(mcp) -> None:
     kubernetes_cloud.register_tools(mcp)
     yad_cloud.register_tools(mcp)
     downstream_buildview.register_tools(mcp)
+    global_properties.register_tools(mcp)

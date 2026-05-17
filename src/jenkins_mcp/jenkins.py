@@ -38,7 +38,6 @@ CONFIG_JOB = '%(folder_url)sjob/%(short_name)s/config.xml'
 DELETE_JOB = '%(folder_url)sjob/%(short_name)s/doDelete'
 ENABLE_JOB = '%(folder_url)sjob/%(short_name)s/enable'
 DISABLE_JOB = '%(folder_url)sjob/%(short_name)s/disable'
-CHECK_JENKINSFILE_SYNTAX = 'pipeline-model-converter/validateJenkinsfile'
 SET_JOB_BUILD_NUMBER = '%(folder_url)sjob/%(short_name)s/nextbuildnumber/submit'
 COPY_JOB = '%(from_folder_url)screateItem?name=%(to_short_name)s&mode=copy&from=%(from_short_name)s'
 RENAME_JOB = '%(from_folder_url)sjob/%(from_short_name)s/doRename?newName=%(to_short_name)s'
@@ -77,6 +76,10 @@ CREATE_CREDENTIAL = '%(folder_url)sjob/%(short_name)s/credentials/store/folder/d
 CONFIG_CREDENTIAL = '%(folder_url)sjob/%(short_name)s/credentials/store/folder/domain/%(domain_name)s/credential/%(name)s/config.xml'
 CREDENTIAL_INFO = '%(folder_url)sjob/%(short_name)s/credentials/store/folder/domain/%(domain_name)s/credential/%(name)s/api/json?depth=0'
 QUIET_DOWN = 'quietDown'
+CANCEL_QUIET_DOWN = 'cancelQuietDown'
+SAFE_RESTART = 'safeRestart'
+RESTART = 'restart'
+RELOAD = 'reload'
 
 LAUNCHER_SSH = 'hudson.plugins.sshslaves.SSHLauncher'
 LAUNCHER_COMMAND = 'hudson.slaves.CommandLauncher'
@@ -546,6 +549,42 @@ class Jenkins:
             f.write(data)
         return {'file': path, 'size': len(data)}
 
+    def get_build_env_vars(self, name: str, number: int) -> dict:
+        """获取构建的环境变量
+
+        优先尝试 injectedEnvVars API（EnvInject插件），
+        失败时从 build info actions 中提取参数和环境变量。
+
+        参数:
+            name: 任务名称
+            number: 构建编号
+
+        返回:
+            {key: value, ...} 环境变量字典
+        """
+        folder_url, short_name = self._get_job_folder(name)
+        try:
+            response = self.jenkins_open(requests.Request(
+                'GET', self._build_url(BUILD_ENV_VARS, locals())
+            ))
+            data = json.loads(response)
+            return data.get('envMap', {})
+        except Exception:
+            info = self.get_build_info(name, number, depth=2)
+            env = {}
+            for action in info.get('actions', []):
+                cls = action.get('_class', '')
+                if 'ParametersAction' in cls:
+                    for p in action.get('parameters', []):
+                        env[p.get('name', '')] = str(p.get('value', ''))
+                elif 'EnvironmentContributingAction' in cls:
+                    for k, v in action.get('env', {}).items():
+                        env[k] = str(v)
+                elif 'EnvironmentAction' in cls:
+                    for k, v in action.get('environment', {}).items():
+                        env[k] = str(v)
+            return env
+
     def get_build_artifacts(self, name: str, number: int) -> list:
         """获取构建所有制品列表
         
@@ -667,39 +706,47 @@ class Jenkins:
             labels: Optional[str] = None,
             exclusive: bool = False,
             launcher: str = LAUNCHER_COMMAND,
-            launcher_params: Optional[dict] = None
+            launcher_params: Optional[dict] = None,
+            config_xml: Optional[str] = None
     ) -> None:
         """创建节点"""
         if self.node_exists(name):
             raise JenkinsException(f'node[{name}] already exists')
 
-        mode = 'EXCLUSIVE' if exclusive else 'NORMAL'
+        if config_xml:
+            self.jenkins_open(requests.Request(
+                'POST', self._build_url(CREATE_NODE) + '?name=' + urllib.parse.quote(name),
+                data=config_xml.encode('utf-8'),
+                headers=DEFAULT_HEADERS
+            ))
+        else:
+            mode = 'EXCLUSIVE' if exclusive else 'NORMAL'
 
-        inner_params = {
-            'nodeDescription': nodeDescription or '',
-            'numExecutors': numExecutors,
-            'remoteFS': remoteFS,
-            'labelString': labels or '',
-            'mode': mode,
-            'retentionStrategy': {
-                'stapler-class': 'hudson.slaves.RetentionStrategy$Always'
-            },
-            'nodeProperties': {'stapler-class-bag': 'true'},
-            'launcher': (launcher_params or {})
-        }
-        launcher_params = launcher_params or {}
-        launcher_params['stapler-class'] = launcher
+            inner_params = {
+                'nodeDescription': nodeDescription or '',
+                'numExecutors': numExecutors,
+                'remoteFS': remoteFS,
+                'labelString': labels or '',
+                'mode': mode,
+                'retentionStrategy': {
+                    'stapler-class': 'hudson.slaves.RetentionStrategy$Always'
+                },
+                'nodeProperties': {'stapler-class-bag': 'true'},
+                'launcher': (launcher_params or {})
+            }
+            launcher_params = launcher_params or {}
+            launcher_params['stapler-class'] = launcher
 
-        params = {
-            'name': name,
-            'type': NODE_TYPE,
-            'json': json.dumps(inner_params)
-        }
+            params = {
+                'name': name,
+                'type': NODE_TYPE,
+                'json': json.dumps(inner_params)
+            }
 
-        self.jenkins_open(requests.Request(
-            'POST', self._build_url(CREATE_NODE, locals()),
-            data=params
-        ))
+            self.jenkins_open(requests.Request(
+                'POST', self._build_url(CREATE_NODE, locals()),
+                data=params
+            ))
 
         if not self.node_exists(name):
             raise JenkinsException(f'create[{name}] failed')
@@ -845,5 +892,21 @@ class Jenkins:
         raise JenkinsException(result)
 
     def quiet_down(self) -> None:
-        """Quiet Down Jenkins"""
+        """Quiet Down Jenkins - 进入静默模式，不再接受新构建"""
         self.jenkins_open(requests.Request('POST', self._build_url(QUIET_DOWN, {})))
+
+    def cancel_quiet_down(self) -> None:
+        """Cancel Quiet Down - 取消静默模式"""
+        self.jenkins_open(requests.Request('POST', self._build_url(CANCEL_QUIET_DOWN, {})))
+
+    def safe_restart(self) -> None:
+        """Safe Restart - 等待所有运行中的构建完成后重启"""
+        self.jenkins_open(requests.Request('POST', self._build_url(SAFE_RESTART, {})))
+
+    def restart(self) -> None:
+        """强制重启 - 立即重启Jenkins"""
+        self.jenkins_open(requests.Request('POST', self._build_url(RESTART, {})))
+
+    def reload_configuration(self) -> None:
+        """重载配置 - 从磁盘重新加载所有配置"""
+        self.jenkins_open(requests.Request('POST', self._build_url(RELOAD, {})))

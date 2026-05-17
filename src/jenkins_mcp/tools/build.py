@@ -194,3 +194,60 @@ async def download_all_artifacts(
         results.append(result)
     
     return results
+
+
+async def get_build_env_vars(jk, name: str, number: int) -> dict:
+    """获取Build的环境变量
+
+    参数:
+        name: Job名称
+        number: 构建号
+
+    返回:
+        环境变量字典 {key: value}
+    """
+    return jk.get_build_env_vars(name, number)
+
+
+async def diff_build_env_vars(jk, name: str, number1: int, number2: int) -> dict:
+    """对比同一个Job的两次Build之间的环境变量差异
+
+    参数:
+        name: Job名称
+        number1: 第一个构建号
+        number2: 第二个构建号
+
+    返回:
+        差异分析结果
+    """
+    vars1 = jk.get_build_env_vars(name, number1)
+    vars2 = jk.get_build_env_vars(name, number2)
+
+    keys1 = set(vars1.keys())
+    keys2 = set(vars2.keys())
+
+    added = {k: vars2[k] for k in keys2 - keys1}
+    removed = {k: vars1[k] for k in keys1 - keys2}
+    common = keys1 & keys2
+
+    changed = {}
+    for k in sorted(common):
+        if vars1[k] != vars2[k]:
+            changed[k] = {"old": vars1[k], "new": vars2[k]}
+
+    return {
+        "job": name,
+        "build1": number1,
+        "build2": number2,
+        "summary": {
+            "total_build1": len(vars1),
+            "total_build2": len(vars2),
+            "added": len(added),
+            "removed": len(removed),
+            "changed": len(changed),
+            "unchanged": len(common) - len(changed),
+        },
+        "added": added,
+        "removed": removed,
+        "changed": changed,
+    }

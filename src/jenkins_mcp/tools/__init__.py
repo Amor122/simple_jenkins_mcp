@@ -9,6 +9,6 @@ from . import label
 from . import cloud
 from . import script
 from . import plugins_management
-from .utils import check_read_only, admin_only, write_only
+from .utils import check_read_only, admin_only, write_only, create_jenkins_client, verify_credentials
 
-__all__ = ['job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud', 'script', 'plugins_management', 'check_read_only', 'admin_only', 'write_only']
+__all__ = ['job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud', 'script', 'plugins_management', 'check_read_only', 'admin_only', 'write_only', 'create_jenkins_client', 'verify_credentials']

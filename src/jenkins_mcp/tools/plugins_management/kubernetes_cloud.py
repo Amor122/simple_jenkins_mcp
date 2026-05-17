@@ -467,6 +467,90 @@ return "{{\\"success\\": true, \\"name\\": \\"" + config.name + "\\"}}"
         raise JenkinsException(f'Failed to add pod template: {e}')
 
 
+async def update_pod_template(jk: Jenkins, cloud_name: str, template_name: str, template_config: dict) -> dict:
+    """更新Kubernetes Pod模板
+
+    参数:
+        cloud_name: Kubernetes云名称
+        template_name: 模板名称
+        template_config: 要更新的字段 {
+            label: str, instanceCap: int, namespace: str,
+            inheritFrom: str, nodeSelector: str, serviceAccount: str,
+            hostNetwork: bool, idleMinutes: int, yaml: str,
+            podRetention: str, containers: list
+        }
+    """
+    import json as _json
+    updates = _json.dumps(template_config)
+
+    script = f'''
+import org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud
+import org.csanchez.jenkins.plugins.kubernetes.PodTemplate
+import org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate
+import org.csanchez.jenkins.plugins.kubernetes.model.KeyValueEnvVar
+import jenkins.model.Jenkins
+import groovy.json.JsonSlurper
+
+def cloud = Jenkins.getInstance().clouds.find {{ it.name == "{cloud_name}" && it instanceof KubernetesCloud }}
+if (!cloud) return "{{\\"error\\": \\"Kubernetes cloud not found: {cloud_name}\\"}}"
+
+def t = cloud.templates.find {{ it.name == "{template_name}" }}
+if (!t) return "{{\\"error\\": \\"Pod template not found: {template_name}\\"}}"
+
+def updates = new JsonSlurper().parseText(''' + _json.dumps(updates) + ''')
+
+if (updates.containsKey("label")) t.label = updates.label ?: ""
+if (updates.containsKey("instanceCap")) t.instanceCap = (updates.instanceCap ?: Integer.MAX_VALUE) as int
+if (updates.containsKey("namespace")) t.namespace = updates.namespace ?: ""
+if (updates.containsKey("inheritFrom")) t.inheritFrom = updates.inheritFrom ?: ""
+if (updates.containsKey("nodeSelector")) t.nodeSelector = updates.nodeSelector ?: ""
+if (updates.containsKey("serviceAccount")) t.serviceAccount = updates.serviceAccount ?: ""
+if (updates.containsKey("hostNetwork")) t.hostNetwork = updates.hostNetwork as boolean
+if (updates.containsKey("idleMinutes")) t.idleMinutes = (updates.idleMinutes ?: 0) as int
+if (updates.containsKey("yaml")) t.yaml = updates.yaml ?: ""
+if (updates.containsKey("podRetention")) {{
+    def retentions = org.csanchez.jenkins.plugins.kubernetes.pod.retention.PodRetention.all()
+    def retention = retentions.find {{ it.class.simpleName == updates.podRetention }}
+    if (retention) t.podRetention = retention
+}}
+if (updates.containsKey("containers")) {{
+    def containers = updates.containers.collect {{ c ->
+        def ct = new ContainerTemplate(c.name ?: "", c.image ?: "")
+        ct.command = c.command ?: ""
+        ct.args = c.args ?: ""
+        ct.workingDir = c.workingDir ?: "/home/jenkins/agent"
+        ct.ttyEnabled = c.ttyEnabled ?: false
+        ct.privileged = c.privileged ?: false
+        ct.alwaysPullImage = c.alwaysPullImage ?: false
+        ct.resourceRequestCpu = c.resourceRequestCpu ?: ""
+        ct.resourceRequestMemory = c.resourceRequestMemory ?: ""
+        ct.resourceLimitCpu = c.resourceLimitCpu ?: ""
+        ct.resourceLimitMemory = c.resourceLimitMemory ?: ""
+        ct.resourceRequestEphemeralStorage = c.resourceRequestEphemeralStorage ?: ""
+        ct.resourceLimitEphemeralStorage = c.resourceLimitEphemeralStorage ?: ""
+        ct.shell = c.shell ?: ""
+        if (c.envVars) {{
+            c.envVars.each {{ ev ->
+                if (ev.type == "keyValue") {{
+                    ct.envVars.add(new KeyValueEnvVar(ev.key, ev.value ?: ""))
+                }}
+            }}
+        }}
+        return ct
+    }}
+    t.containers = containers
+}}
+
+Jenkins.getInstance().save()
+return "{{\\"success\\": true, \\"name\\": \\"{template_name}\\"}}"
+'''
+    try:
+        result = _run_groovy(jk, script)
+        return json.loads(result)
+    except Exception as e:
+        raise JenkinsException(f'Failed to update pod template: {e}')
+
+
 async def delete_pod_template(jk: Jenkins, cloud_name: str, template_name: str) -> dict:
     """删除Kubernetes云中的Pod模板"""
     script = f'''

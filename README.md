@@ -71,7 +71,6 @@ python -m jenkins_mcp.server --config jenkins_mcp\.env
 - `set_next_build_number` - 设置下一个构建号
 - `wipeout_workspace` - 清空工作区
 - `job_exists` - 检查Job是否存在
-- `check_jenkinsfile_syntax` - 检查Pipeline语法
 
 ### Build管理 (10个)
 - `get_build` - 获取Build信息

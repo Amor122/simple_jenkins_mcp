@@ -81,8 +81,3 @@ def register_tools(mcp: FastMCP) -> None:
     async def job_exists(name: str):
         """检查Job是否存在"""
         return await tools.job.job_exists(get_jk(), name)
-
-    @mcp.tool()
-    async def check_jenkinsfile_syntax(jenkinsfile: str):
-        """检查Pipeline语法"""
-        return await tools.job.check_jenkinsfile_syntax(get_jk(), jenkinsfile)

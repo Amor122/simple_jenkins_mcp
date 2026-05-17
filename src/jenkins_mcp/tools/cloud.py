@@ -21,7 +21,6 @@ def _run_groovy(jk, script: str) -> str:
 
 # ==================== 配置读取 ====================
 
-@write_only
 async def get_all_clouds(jk) -> list:
     """获取所有云配置
 
@@ -72,7 +71,6 @@ return JsonOutput.toJson(clouds)
         raise JenkinsException(f'Failed to get clouds: {e}')
 
 
-@write_only
 async def get_cloud_config(jk, name: str) -> dict:
     """获取指定云配置的详细信息
     
@@ -184,7 +182,6 @@ return JsonOutput.toJson(config)
         raise JenkinsException(f'Failed to get cloud config for {name}: {e}')
 
 
-@write_only
 async def get_cloud_templates(jk, cloud_name: str) -> list:
     """获取云的所有模板
     
@@ -235,7 +232,6 @@ return JsonOutput.toJson(templates)
 
 # ==================== 节点分析 ====================
 
-@write_only
 async def analyze_cloud_nodes(jk, cloud_name: str = None) -> dict:
     """分析云相关的节点
     
@@ -381,7 +377,6 @@ return JsonOutput.toJson(nodeAnalysis)
         raise JenkinsException(f'Failed to analyze nodes: {e}')
 
 
-@write_only
 async def get_nodes_by_label(jk, label: str) -> list:
     """获取具有指定Label的所有节点（包括云节点）
     
@@ -424,7 +419,6 @@ return JsonOutput.toJson(nodes)
 
 # ==================== 可用性分析 ====================
 
-@write_only
 async def analyze_cloud_availability(jk, cloud_name: str = None) -> dict:
     """分析云可用性和健康状态
     
@@ -601,7 +595,6 @@ return JsonOutput.toJson(availability)
         raise JenkinsException(f'Failed to analyze availability: {e}')
 
 
-@write_only
 async def get_provisioning_stats(jk) -> dict:
     """获取全局 Provisioning 统计信息
     
@@ -939,7 +932,6 @@ return "Template {{name}} added to cloud {{cloud_name}}"
         raise JenkinsException(f'Failed to add template: {e}')
 
 
-@write_only
 async def get_kubernetes_pods(jk, namespace: str = None) -> dict:
     """获取Kubernetes pods信息
     
@@ -982,7 +974,6 @@ return JsonOutput.toJson(result)
         raise JenkinsException(f'Failed to get pods: {e}')
 
 
-@write_only
 async def get_clouds_by_type(jk) -> list:
     """获取所有云并按类型归类
 

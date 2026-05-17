@@ -61,3 +61,38 @@ def register_tools(mcp: FastMCP) -> None:
     async def download_all_artifacts(name: str, number: int, output_dir: str):
         """下载Build的所有制品到本地目录"""
         return await tools.build.download_all_artifacts(get_jk(), name, number, output_dir)
+
+    @mcp.tool()
+    async def get_build_env_vars(name: str, number: int):
+        """获取Build的环境变量
+
+        优先通过 injectedEnvVars API（EnvInject插件）获取，
+        失败时从构建信息中提取参数和环境变量。
+
+        参数:
+            name: Job名称
+            number: 构建号
+
+        返回:
+            环境变量字典
+        """
+        return await tools.build.get_build_env_vars(get_jk(), name, number)
+
+    @mcp.tool()
+    async def diff_build_env_vars(name: str, number1: int, number2: int):
+        """对比同一个Job的两次Build之间的环境变量差异
+
+        分析两个构建之间的环境变量差异，包括：
+        - added: 新增的变量
+        - removed: 移除的变量
+        - changed: 值发生变化的变量
+
+        参数:
+            name: Job名称
+            number1: 第一个构建号
+            number2: 第二个构建号
+
+        返回:
+            差异分析结果（含汇总统计和详细变更列表）
+        """
+        return await tools.build.diff_build_env_vars(get_jk(), name, number1, number2)

@@ -58,19 +58,6 @@ def register_tools(mcp: FastMCP) -> None:
         return await tools.cloud.delete_template(get_jk(), cloud_name, template_name)
 
     @mcp.tool()
-    async def create_kubernetes_cloud(name: str, server_url: str, namespace: str = 'default',
-                                   credentials_id: str = None, container_cap: int = 0):
-        """创建Kubernetes云配置"""
-        return await tools.cloud.create_kubernetes_cloud(
-            get_jk(), name, server_url, namespace, credentials_id, container_cap
-        )
-
-    @mcp.tool()
-    async def add_pod_template(cloud_name: str, template_config: dict):
-        """添加Pod模板到Kubernetes云"""
-        return await tools.cloud.add_pod_template(get_jk(), cloud_name, template_config)
-
-    @mcp.tool()
     async def get_kubernetes_pods(namespace: str = None):
         """获取Kubernetes pods信息"""
         return await tools.cloud.get_kubernetes_pods(get_jk(), namespace)
