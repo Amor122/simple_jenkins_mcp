@@ -80,6 +80,8 @@ CANCEL_QUIET_DOWN = 'cancelQuietDown'
 SAFE_RESTART = 'safeRestart'
 RESTART = 'restart'
 RELOAD = 'reload'
+PLUGIN_INSTALL = '/pluginManager/installNecessaryPlugins'
+PLUGIN_UNINSTALL = '/plugin/%(short_name)s/doUninstall'
 
 LAUNCHER_SSH = 'hudson.plugins.sshslaves.SSHLauncher'
 LAUNCHER_COMMAND = 'hudson.slaves.CommandLauncher'
@@ -111,6 +113,7 @@ class BadHTTPException(JenkinsException):
 
 class TimeoutException(JenkinsException):
     """A special exception to call out in the case of a socket timeout."""
+    pass
 
 
 class Jenkins:
@@ -804,6 +807,39 @@ class Jenkins:
             if plugin.get('shortName') == short_name:
                 return plugin
         return None
+
+    def install_plugin(self, short_name: str, version: Optional[str] = None) -> dict:
+        """安装插件
+
+        参数:
+            short_name: 插件短名称
+            version: 可选版本号，不指定则安装最新版
+        """
+        payload = {'dynamicLoad': True, 'plugins': [{'name': short_name}]}
+        if version:
+            payload['plugins'][0]['version'] = version
+        headers = {'Content-Type': 'application/json'}
+        self.jenkins_open(requests.Request(
+            'POST', self._build_url(PLUGIN_INSTALL),
+            data=json.dumps(payload), headers=headers
+        ))
+        return {'status': 'installed', 'plugin': short_name, 'version': version or 'latest'}
+
+    def uninstall_plugin(self, short_name: str) -> None:
+        """卸载插件"""
+        self.jenkins_open(requests.Request(
+            'POST', self._build_url(PLUGIN_UNINSTALL, {'short_name': short_name})
+        ))
+
+    def enable_plugin(self, short_name: str) -> None:
+        """启用插件（通过Groovy脚本）"""
+        script = f'jenkins.model.Jenkins.instance.pluginManager.getPlugin("{short_name}")?.enable()'
+        self.run_script(script)
+
+    def disable_plugin(self, short_name: str) -> None:
+        """禁用插件（通过Groovy脚本）"""
+        script = f'jenkins.model.Jenkins.instance.pluginManager.getPlugin("{short_name}")?.disable()'
+        self.run_script(script)
 
     # ========== View管理方法 ==========
 

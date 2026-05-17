@@ -16,8 +16,11 @@ from . import plugin
 from . import label
 from . import cloud
 from . import script
+from . import resources
+from . import prompts
+from . import view
 
-__all__ = ['lockable_resources', 'config_file_provider', 'job_config_history', 'docker_cloud', 'kubernetes_cloud', 'yad_cloud', 'downstream_buildview', 'job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud', 'script']
+__all__ = ['lockable_resources', 'config_file_provider', 'job_config_history', 'docker_cloud', 'kubernetes_cloud', 'yad_cloud', 'downstream_buildview', 'job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud', 'script', 'resources', 'prompts', 'view']
 
 
 def register_all_tools(mcp) -> None:
@@ -38,3 +41,6 @@ def register_all_tools(mcp) -> None:
     yad_cloud.register_tools(mcp)
     downstream_buildview.register_tools(mcp)
     global_properties.register_tools(mcp)
+    view.register_tools(mcp)
+    resources.register_resources(mcp)
+    prompts.register_prompts(mcp)

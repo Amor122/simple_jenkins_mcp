@@ -23,7 +23,7 @@ import requests
 from jenkins_mcp.jenkins import Jenkins
 
 
-async def get_all_config_history(jk: Jenkins, filter: str = 'all') -> list:
+async def get_all_config_history(jk: Jenkins, filter_param: str = 'all') -> list:
     """获取全局配置历史
 
     通过REST API获取所有配置修改历史记录
@@ -33,7 +33,7 @@ async def get_all_config_history(jk: Jenkins, filter: str = 'all') -> list:
     """
     try:
         response = jk.jenkins_open(
-            requests.Request('GET', jk._build_url(f'jobConfigHistory/api/json?filter={filter}'))
+            requests.Request('GET', jk._build_url(f'jobConfigHistory/api/json?filter={filter_param}'))
         )
         data = json.loads(response)
         return data.get('configs', [])

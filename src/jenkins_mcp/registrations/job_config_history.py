@@ -13,13 +13,13 @@ def register_tools(mcp: FastMCP) -> None:
         return get_jenkins_client()
 
     @mcp.tool()
-    async def get_all_config_history(filter: str = 'all'):
+    async def get_all_config_history(filter_param: str = 'all'):
         """获取全局配置历史
 
         参数:
-            filter: 过滤条件，可选值: all, system, jobs, deleted
+            filter_param: 过滤条件，可选值: all, system, jobs, deleted
         """
-        return await tools.plugins_management.job_config_history.get_all_config_history(get_jk(), filter)
+        return await tools.plugins_management.job_config_history.get_all_config_history(get_jk(), filter_param)
 
     @mcp.tool()
     async def get_job_config_history(job_name: str):
