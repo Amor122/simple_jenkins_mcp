@@ -17,22 +17,26 @@ def register_prompts(mcp: FastMCP) -> None:
         return get_jenkins_client()
 
     @mcp.prompt()
-    async def debug_build(job: str, build: int) -> str:
+    async def debug_build(job: str, build: str) -> str:
         """诊断构建失败：获取构建状态、日志尾部（最后50行）、环境变量概览"""
         jk = get_jk()
-        result = jk.get_build_info(job, build)
+        try:
+            build_num = int(build)
+        except ValueError:
+            return f"无效的构建号: `{build}`，请输入数字（如 123）"
+        result = jk.get_build_info(job, build_num)
         status = result.get('result', 'UNKNOWN')
-        console = jk.get_build_console_output(job, build)
+        console = jk.get_build_console_output(job, build_num)
         tail = "\n".join(console.split("\n")[-50:]) if console else "(空)"
         try:
-            env = jk.get_build_env_vars(job, build)
+            env = jk.get_build_env_vars(job, build_num)
             env_summary = "\n".join(f"  {k}={v}" for k, v in list(env.items())[:20])
             if len(env) > 20:
                 env_summary += f"\n  ... 共 {len(env)} 个变量"
         except Exception:
             env_summary = "(无法获取)"
 
-        return f"""## Build 诊断报告: {job} #{build}
+        return f"""## Build 诊断报告: {job} #{build_num}
 
 ### 状态
 - 结果: {status}
@@ -51,12 +55,13 @@ def register_prompts(mcp: FastMCP) -> None:
 3. 使用 `get_build_artifacts` 查看构建制品"""
 
     @mcp.prompt()
-    async def compare_builds(job: str, build1: int, build2: int) -> str:
+    async def compare_builds(job: str, build1: str, build2: str) -> str:
         """对比两次构建的环境变量差异"""
         jk = get_jk()
         try:
-            vars1 = jk.get_build_env_vars(job, build1)
-            vars2 = jk.get_build_env_vars(job, build2)
+            b1, b2 = int(build1), int(build2)
+            vars1 = jk.get_build_env_vars(job, b1)
+            vars2 = jk.get_build_env_vars(job, b2)
         except Exception as e:
             return f"获取环境变量失败: {e}"
 
@@ -65,9 +70,9 @@ def register_prompts(mcp: FastMCP) -> None:
         removed = keys1 - keys2
         changed = {k for k in (keys1 & keys2) if vars1[k] != vars2[k]}
 
-        lines = [f"## 环境变量对比: {job} #{build1} vs #{build2}", ""]
-        lines.append(f"- Build #{build1}: {len(vars1)} 个变量")
-        lines.append(f"- Build #{build2}: {len(vars2)} 个变量")
+        lines = [f"## 环境变量对比: {job} #{b1} vs #{b2}", ""]
+        lines.append(f"- Build #{b1}: {len(vars1)} 个变量")
+        lines.append(f"- Build #{b2}: {len(vars2)} 个变量")
         lines.append(f"- 新增: {len(added)} | 移除: {len(removed)} | 变化: {len(changed)}")
         lines.append("")
 
