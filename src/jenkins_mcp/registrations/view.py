@@ -3,6 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from jenkins_mcp import tools
+from jenkins_mcp.registrations.helpers import register_tool
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -27,7 +28,7 @@ def register_tools(mcp: FastMCP) -> None:
         """获取视图名称（验证视图存在性）"""
         return await tools.view.get_view_name(get_jk(), name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def create_view(name: str, config_xml: str):
         """创建视图"""
         return await tools.view.create_view(get_jk(), name, config_xml)
@@ -37,12 +38,12 @@ def register_tools(mcp: FastMCP) -> None:
         """获取视图配置XML"""
         return await tools.view.get_view_config(get_jk(), name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def reconfig_view(name: str, config_xml: str):
         """更新视图配置"""
         return await tools.view.reconfig_view(get_jk(), name, config_xml)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def delete_view(name: str):
         """删除视图"""
         return await tools.view.delete_view(get_jk(), name)

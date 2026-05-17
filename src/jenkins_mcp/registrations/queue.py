@@ -3,6 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from jenkins_mcp import tools
+from jenkins_mcp.registrations.helpers import register_tool
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -27,17 +28,17 @@ def register_tools(mcp: FastMCP) -> None:
         """获取指定Job的队列项"""
         return await tools.queue.get_queue_items_by_job(get_jk(), name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def cancel_queue_item(id: int):
         """取消队列项"""
         return await tools.queue.cancel_queue_item(get_jk(), id)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def cancel_job_queue(name: str):
         """取消Job的队列"""
         return await tools.queue.cancel_job_queue(get_jk(), name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def cancel_all_queue():
         """取消所有队列"""
         return await tools.queue.cancel_all_queue(get_jk())

@@ -3,6 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from jenkins_mcp import tools
+from jenkins_mcp.registrations.helpers import register_tool
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -37,22 +38,22 @@ def register_tools(mcp: FastMCP) -> None:
         """分析云可用性和健康状态"""
         return await tools.cloud.analyze_cloud_availability(get_jk(), cloud_name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def disable_cloud(cloud_name: str):
         """禁用云"""
         return await tools.cloud.disable_cloud(get_jk(), cloud_name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def enable_cloud(cloud_name: str):
         """启用云"""
         return await tools.cloud.enable_cloud(get_jk(), cloud_name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def delete_cloud(cloud_name: str):
         """删除云配置"""
         return await tools.cloud.delete_cloud(get_jk(), cloud_name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def delete_template(cloud_name: str, template_name: str):
         """删除云模板"""
         return await tools.cloud.delete_template(get_jk(), cloud_name, template_name)

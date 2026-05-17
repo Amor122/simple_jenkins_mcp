@@ -3,6 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from jenkins_mcp import tools
+from jenkins_mcp.registrations.helpers import register_tool
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -27,17 +28,17 @@ def register_tools(mcp: FastMCP) -> None:
         """获取运行中的Build"""
         return await tools.build.get_running_builds(get_jk())
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def stop_build(name: str, number: int):
         """停止Build"""
         return await tools.build.stop_build(get_jk(), name, number)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def delete_build(name: str, number: int):
         """删除Build记录"""
         return await tools.build.delete_build(get_jk(), name, number)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def stop_all_builds(name: str = None):
         """停止所有运行中的Build"""
         return await tools.build.stop_all_builds(get_jk(), name)
@@ -52,12 +53,12 @@ def register_tools(mcp: FastMCP) -> None:
         """获取Build制品内容（文本）"""
         return await tools.build.get_build_artifact(get_jk(), name, number, artifact)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def download_build_artifact(name: str, number: int, artifact: str, path: str):
         """下载Build特定制品到本地文件"""
         return await tools.build.download_build_artifact(get_jk(), name, number, artifact, path)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def download_all_artifacts(name: str, number: int, output_dir: str):
         """下载Build的所有制品到本地目录"""
         return await tools.build.download_all_artifacts(get_jk(), name, number, output_dir)

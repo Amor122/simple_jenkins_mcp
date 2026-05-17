@@ -3,6 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from jenkins_mcp import tools
+from jenkins_mcp.registrations.helpers import register_tool
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -27,7 +28,7 @@ def register_tools(mcp: FastMCP) -> None:
         """获取有问题的插件"""
         return await tools.plugin.get_plugins_with_problems(get_jk())
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def install_plugin(short_name: str, version: str = None):
         """安装插件
 
@@ -37,17 +38,17 @@ def register_tools(mcp: FastMCP) -> None:
         """
         return await tools.plugin.install_plugin(get_jk(), short_name, version)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def enable_plugin(short_name: str):
         """启用插件"""
         return await tools.plugin.enable_plugin(get_jk(), short_name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def disable_plugin(short_name: str):
         """禁用插件"""
         return await tools.plugin.disable_plugin(get_jk(), short_name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def uninstall_plugin(short_name: str):
         """卸载插件"""
         return await tools.plugin.uninstall_plugin(get_jk(), short_name)

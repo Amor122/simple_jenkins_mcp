@@ -3,6 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from jenkins_mcp import tools
+from jenkins_mcp.registrations.helpers import register_tool
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -12,11 +13,9 @@ def register_tools(mcp: FastMCP) -> None:
         from jenkins_mcp.server import get_jenkins_client
         return get_jenkins_client()
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def run_groovy_script(script: str):
         """执行任意Groovy脚本
-        
-        用于访问Jenkins没有REST API的内部功能
         """
         return await tools.script.run_groovy_script(get_jk(), script)
 
@@ -49,7 +48,7 @@ def register_tools(mcp: FastMCP) -> None:
         """获取Jenkins系统消息（dashboard上显示的描述信息）"""
         return await tools.script.get_system_message(get_jk())
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def set_system_message(username: str, api_token: str, message: str, confirm: bool = False):
         """设置Jenkins系统消息
 
@@ -58,7 +57,7 @@ def register_tools(mcp: FastMCP) -> None:
         """
         return await tools.script.set_system_message(username, api_token, message, confirm)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def safe_restart_jenkins(username: str, api_token: str, confirm: bool = False):
         """安全重启Jenkins - 等待所有运行中的构建完成后重启
 
@@ -68,7 +67,7 @@ def register_tools(mcp: FastMCP) -> None:
         """
         return await tools.script.safe_restart_jenkins(username, api_token, confirm)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def restart_jenkins(username: str, api_token: str, confirm: bool = False):
         """强制重启Jenkins - 立即重启（会中断运行中的构建）
 
@@ -78,7 +77,7 @@ def register_tools(mcp: FastMCP) -> None:
         """
         return await tools.script.restart_jenkins(username, api_token, confirm)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def reload_jenkins_config(username: str, api_token: str, confirm: bool = False):
         """重载Jenkins配置 - 从磁盘重新加载所有配置
 
@@ -96,7 +95,7 @@ def register_tools(mcp: FastMCP) -> None:
         """
         return await tools.script.get_quiet_down_status(get_jk())
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def quiet_down_jenkins(username: str, api_token: str, confirm: bool = False):
         """设置Jenkins静默模式 - 不再接受新构建
 
@@ -105,7 +104,7 @@ def register_tools(mcp: FastMCP) -> None:
         """
         return await tools.script.quiet_down_jenkins(username, api_token, confirm)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def cancel_quiet_down_jenkins(username: str, api_token: str, confirm: bool = False):
         """取消Jenkins静默模式 - 恢复正常接受构建
 

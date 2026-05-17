@@ -3,6 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from jenkins_mcp import tools
+from jenkins_mcp.registrations.helpers import register_tool
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -27,52 +28,52 @@ def register_tools(mcp: FastMCP) -> None:
         """获取Job配置XML"""
         return await tools.job.get_job_config(get_jk(), name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def set_job_config(name: str, config_xml: str):
         """设置Job配置"""
         return await tools.job.set_job_config(get_jk(), name, config_xml)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def create_job(name: str, config_xml: str):
         """创建新Job"""
         return await tools.job.create_job(get_jk(), name, config_xml)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def delete_job(name: str):
         """删除Job"""
         return await tools.job.delete_job(get_jk(), name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def copy_job(from_name: str, to_name: str):
         """复制Job"""
         return await tools.job.copy_job(get_jk(), from_name, to_name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def enable_job(name: str):
         """启用Job"""
         return await tools.job.enable_job(get_jk(), name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def disable_job(name: str):
         """禁用Job"""
         return await tools.job.disable_job(get_jk(), name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def build_job(name: str, parameters: dict = None, token: str = None):
         """触发构建"""
         return await tools.job.build_job(get_jk(), name, parameters, token)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def rename_job(name: str, new_name: str):
         """重命名Job"""
         return await tools.job.rename_job(get_jk(), name, new_name)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def set_next_build_number(name: str, number: int):
         """设置下一个构建号"""
         return await tools.job.set_next_build_number(get_jk(), name, number)
 
-    @mcp.tool()
+    @register_tool(mcp, write_only=True)
     async def wipeout_workspace(name: str):
         """清空工作区"""
         return await tools.job.wipeout_workspace(get_jk(), name)
