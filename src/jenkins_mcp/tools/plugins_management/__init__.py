@@ -6,3 +6,4 @@ from . import job_config_history
 from . import docker_cloud
 from . import kubernetes_cloud
 from . import yad_cloud
+from . import downstream_buildview

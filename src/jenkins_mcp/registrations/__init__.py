@@ -6,6 +6,7 @@ from . import job_config_history
 from . import docker_cloud
 from . import kubernetes_cloud
 from . import yad_cloud
+from . import downstream_buildview
 from . import job
 from . import build
 from . import queue
@@ -15,7 +16,7 @@ from . import label
 from . import cloud
 from . import script
 
-__all__ = ['lockable_resources', 'config_file_provider', 'job_config_history', 'docker_cloud', 'kubernetes_cloud', 'yad_cloud', 'job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud', 'script']
+__all__ = ['lockable_resources', 'config_file_provider', 'job_config_history', 'docker_cloud', 'kubernetes_cloud', 'yad_cloud', 'downstream_buildview', 'job', 'build', 'queue', 'node', 'plugin', 'label', 'cloud', 'script']
 
 
 def register_all_tools(mcp) -> None:
@@ -34,3 +35,4 @@ def register_all_tools(mcp) -> None:
     docker_cloud.register_tools(mcp)
     kubernetes_cloud.register_tools(mcp)
     yad_cloud.register_tools(mcp)
+    downstream_buildview.register_tools(mcp)
